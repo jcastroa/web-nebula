@@ -1,0 +1,11 @@
+/database/
+/codigo/descargas/
+/www/assets/captcha
+/descargas/
+.env
+/codigo/generador_log.txt
+docker-compose_produccion.yml
+docker-compose-local.yml
+/www/writable
+/www/tests
+.vscode/

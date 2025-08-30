@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  nebula-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nebula-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules  # Importante: evita conflictos con node_modules local
+    environment:
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8000  # Agregar URL del backend
+    stdin_open: true
+    tty: true
+    restart: unless-stopped  # Opcional: reinicia si falla
