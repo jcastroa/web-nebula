@@ -3,6 +3,60 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../services/api';
 
+// Función para obtener info del dispositivo
+const getDeviceInfo = () => {
+  // Detectar plataforma de forma moderna
+  const getPlatform = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('windows')) return 'Windows';
+    if (ua.includes('mac')) return 'macOS';
+    if (ua.includes('linux')) return 'Linux';
+    if (ua.includes('android')) return 'Android';
+    if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+    return 'Unknown';
+  };
+
+  // Detectar si es móvil
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+    .test(navigator.userAgent);
+
+  // Detectar navegador específico
+  const getBrowser = () => {
+    const ua = navigator.userAgent;
+    if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+    if (ua.includes('Edg')) return 'Edge';
+    return 'Other';
+  };
+
+  // Detectar tipo de dispositivo
+  const getDeviceType = () => {
+    if (isMobile) return 'Mobile';
+    if (navigator.userAgent.includes('Tablet')) return 'Tablet';
+    return 'Desktop';
+  };
+
+  return {
+    userAgent: navigator.userAgent,
+    platform: getPlatform(),
+    browser: getBrowser(),
+    deviceType: getDeviceType(),
+    isMobile: isMobile,
+    language: navigator.language,
+    screenResolution: `${window.screen.width}x${window.screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timestamp: new Date().toISOString(),
+    // Info adicional útil para seguridad
+    cookieEnabled: navigator.cookieEnabled,
+    onlineStatus: navigator.onLine,
+    // Memoria aproximada del dispositivo (si está disponible)
+    deviceMemory: navigator.deviceMemory || 'unknown',
+    // Conexión de red (si está disponible)
+    connectionType: navigator.connection?.effectiveType || 'unknown'
+  };
+};
+
 export const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -10,50 +64,49 @@ export const useAuthStore = create(
       user: null,
       isAuthenticated: false,
       isLoading: false,
-      error: null,
 
       // Acciones
       setUser: (user) => set({ 
         user, 
-        isAuthenticated: !!user,
-        error: null 
+        isAuthenticated: !!user
       }),
       
       setLoading: (isLoading) => set({ isLoading }),
-      
-      setError: (error) => set({ error }),
-      
-      clearError: () => set({ error: null }),
 
-      // Login
-      login: async (email, password) => {
+      // Login - SOLO lógica de negocio
+      login: async (username, password, recaptchaToken = null) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ isLoading: true });
 
           const response = await api.post('/auth/login', {
-            email,
-            password
+            username,
+            password,
+            recaptcha_token: recaptchaToken || "",
+            device_info: getDeviceInfo()
           });
 
           const user = response.data.user;
           set({ 
             user, 
             isAuthenticated: true, 
-            isLoading: false,
-            error: null 
+            isLoading: false
           });
 
           return { success: true, user };
 
         } catch (error) {
-          const message = error.response?.data?.message || 'Error en login';
           set({ 
-            error: message, 
             isLoading: false,
             user: null,
             isAuthenticated: false
           });
-          return { success: false, error: message };
+          
+          // NO procesar errores - solo retornarlos sin tocar
+          return { 
+            success: false, 
+            error: error.response?.data,
+            status: error.response?.status
+          };
         }
       },
 
@@ -77,7 +130,7 @@ export const useAuthStore = create(
         } catch (error) {
           console.log('Error en logout:', error);
         } finally {
-          set({ user: null, isAuthenticated: false, error: null });
+          set({ user: null, isAuthenticated: false });
         }
       },
 
@@ -85,8 +138,7 @@ export const useAuthStore = create(
       reset: () => set({
         user: null,
         isAuthenticated: false,
-        isLoading: false,
-        error: null
+        isLoading: false
       })
     }),
     {

@@ -1,12 +1,14 @@
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext'; // ← Ahora del Context
 
-const Dashboard = () => {
-  const { user, logout } = useAuth();
+const Dashboard = () => { // ← Ya no recibe props
+  const navigate = useNavigate();
+  const { user, logout } = useAuth(); // ← Del Context
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/login';
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -22,7 +24,7 @@ const Dashboard = () => {
                 type="button"
                 data-bs-toggle="dropdown"
               >
-                {user?.name || user?.email}
+                {user?.name || user?.username || user?.email}
               </button>
               <ul className="dropdown-menu">
                 <li>
@@ -46,7 +48,7 @@ const Dashboard = () => {
             <div className="card">
               <div className="card-body">
                 <h1 className="card-title">
-                  ¡Bienvenido, {user?.name || 'Usuario'}!
+                  ¡Bienvenido, {user?.name || user?.username || 'Usuario'}!
                 </h1>
                 <p className="card-text text-muted">
                   Email: {user?.email}
@@ -62,7 +64,7 @@ const Dashboard = () => {
                 <div className="card bg-primary text-white">
                   <div className="card-body">
                     <h5>Bienvenido</h5>
-                    <h2>{user?.name}</h2>
+                    <h2>{user?.name || user?.username}</h2>
                   </div>
                 </div>
               </div>

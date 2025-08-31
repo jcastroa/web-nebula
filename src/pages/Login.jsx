@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { processValidationErrors } from '../utils/errorUtils';
 
 const Login = () => {
-  const { login, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
   
+  // Estado del formulario
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
+
+  // Estado de errores - LOCAL al formulario
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,22 +24,46 @@ const Login = () => {
       [name]: value
     }));
     
-    if (error) {
-      clearError();
+    // Limpiar errores cuando el usuario escribe
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    if (generalError) {
+      setGeneralError('');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.password) {
+    // Limpiar errores previos
+    setFieldErrors({});
+    setGeneralError('');
+    
+    if (!formData.username || !formData.password) {
       return;
     }
 
-    const result = await login(formData.email, formData.password);
+    // Llamar al store - SOLO lógica de negocio
+    const result = await login(formData.username, formData.password);
     
     if (result.success) {
-      window.location.href = '/dashboard';
+      navigate('/dashboard', { replace: true });
+    } else {
+      // Procesar errores de UI - LOCAL al formulario
+      const { fieldErrors: fields, generalError: general } = processValidationErrors(result.error, result.status);
+      
+      if (fields && Object.keys(fields).length > 0) {
+        setFieldErrors(fields);
+      }
+      
+      if (general) {
+        setGeneralError(general);
+      }
     }
   };
 
@@ -49,57 +81,70 @@ const Login = () => {
                   <p className="text-muted small">Accede a tu cuenta</p>
                 </div>
 
-                {error && (
+                {/* Error general */}
+                {generalError && (
                   <div className="alert alert-danger alert-dismissible fade show">
-                    {error}
+                    {generalError}
                     <button 
                       type="button" 
                       className="btn-close"
-                      onClick={clearError}
+                      onClick={() => setGeneralError('')}
                     ></button>
                   </div>
                 )}
 
-                <div onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit}>
+                  
+                  {/* Campo Username */}
                   <div className="mb-3">
-                    <label className="form-label">Email</label>
+                    <label className="form-label">Usuario</label>
                     <input
-                      type="email"
-                      name="email"
-                      className="form-control"
-                      value={formData.email}
+                      type="text"
+                      name="username"
+                      className={`form-control ${fieldErrors.username ? 'is-invalid' : ''}`}
+                      value={formData.username}
                       onChange={handleChange}
-                      placeholder="tu@email.com"
+                      placeholder="tu_usuario"
                       disabled={isLoading}
                       required
                     />
+                    {fieldErrors.username && (
+                      <div className="invalid-feedback">
+                        {fieldErrors.username}
+                      </div>
+                    )}
                   </div>
 
+                  {/* Campo Password */}
                   <div className="mb-4">
                     <label className="form-label">Contraseña</label>
                     <input
                       type="password"
                       name="password"
-                      className="form-control"
+                      className={`form-control ${fieldErrors.password ? 'is-invalid' : ''}`}
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="••••••••"
                       disabled={isLoading}
                       required
                     />
+                    {fieldErrors.password && (
+                      <div className="invalid-feedback">
+                        {fieldErrors.password}
+                      </div>
+                    )}
                   </div>
 
                   <div className="d-grid">
                     <button
-                      type="button"
+                      type="submit"
                       className="btn btn-primary btn-lg"
-                      onClick={handleSubmit}
                       disabled={isLoading}
                     >
                       {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
                     </button>
                   </div>
-                </div>
+                </form>
 
               </div>
             </div>

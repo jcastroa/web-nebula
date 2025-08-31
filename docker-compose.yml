@@ -14,7 +14,7 @@ services:
     environment:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_API_URL=http://localhost:8000  # Agregar URL del backend
+      - REACT_APP_API_URL=${REACT_APP_API_URL}  # Agregar URL del backend
     stdin_open: true
     tty: true
     restart: unless-stopped  # Opcional: reinicia si falla
