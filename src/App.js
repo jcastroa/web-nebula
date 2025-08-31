@@ -1,16 +1,17 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './contexts/AuthContext'; // Ahora del context
+import { useAuth } from './contexts/AuthContext';
 
 // Páginas
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
-// Rutas protegidas simplificadas
+// Rutas protegidas
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
+  // ✅ Mostrar loading mientras verifica auth
   if (isLoading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
@@ -28,6 +29,7 @@ const PrivateRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
+  // ✅ Mostrar loading mientras verifica auth
   if (isLoading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">

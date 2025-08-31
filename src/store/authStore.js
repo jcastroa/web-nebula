@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../services/api';
+import { processValidationErrors } from '../utils/errorUtils';
 
 // Función para obtener info del dispositivo
 const getDeviceInfo = () => {
@@ -60,24 +61,22 @@ const getDeviceInfo = () => {
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      // Estado
+      // ✅ SOLO estado de autenticación persistente
       user: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: false, // ✅ Por defecto NO loading
 
-      // Acciones
+      // Acciones básicas
       setUser: (user) => set({ 
         user, 
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        isLoading: false // ✅ Loading false cuando tenemos datos
       }),
-      
-      setLoading: (isLoading) => set({ isLoading }),
 
-      // Login - SOLO lógica de negocio
+      // ✅ Login simple - SOLO maneja autenticación exitosa
       login: async (username, password, recaptchaToken = null) => {
         try {
-          set({ isLoading: true });
-
+          // ✅ NO tocar el store hasta saber el resultado
           const response = await api.post('/auth/login', {
             username,
             password,
@@ -85,23 +84,17 @@ export const useAuthStore = create(
             device_info: getDeviceInfo()
           });
 
+          // ✅ ÉXITO: Actualizar store con datos persistentes
           const user = response.data.user;
           set({ 
             user, 
-            isAuthenticated: true, 
-            isLoading: false
+            isAuthenticated: true
           });
 
           return { success: true, user };
 
         } catch (error) {
-          set({ 
-            isLoading: false,
-            user: null,
-            isAuthenticated: false
-          });
-          
-          // NO procesar errores - solo retornarlos sin tocar
+          // ✅ ERROR: NO TOCAR EL STORE
           return { 
             success: false, 
             error: error.response?.data,
@@ -110,31 +103,72 @@ export const useAuthStore = create(
         }
       },
 
-      // Verificar autenticación
+      // ✅ Verificar autenticación existente
       checkAuth: async () => {
+        console.log('🔍 === INICIANDO checkAuth ===');
+        console.log('🍪 Cookies actuales:', document.cookie);
+        
+        // ✅ Establecer loading solo cuando empezamos a verificar
+        set({ isLoading: true });
+        
         try {
+          console.log('📡 Haciendo GET /auth/me...');
           const response = await api.get('/auth/me');
-          const user = response.data.user;
-          set({ user, isAuthenticated: true });
+          console.log('✅ Respuesta exitosa status:', response.status);
+          console.log('📡 Respuesta completa del servidor:', response.data);
+          
+          const user = response.data;
+          console.log('👤 Usuario extraído:', user);
+          
+          if (!user || !user.id) {
+            console.log('❌ Datos de usuario inválidos - limpiando estado');
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            return false;
+          }
+          
+          console.log('✅ Usuario válido - actualizando store');
+          set({ user, isAuthenticated: true, isLoading: false });
           return true;
+          
         } catch (error) {
-          set({ user: null, isAuthenticated: false });
+          console.log('💥 === ERROR EN checkAuth ===');
+          console.log('Status:', error.response?.status);
+          console.log('Data:', error.response?.data);
+          console.log('Message:', error.message);
+          console.log('Config URL:', error.config?.url);
+          console.log('🧹 Limpiando estado...');
+          
+          set({ user: null, isAuthenticated: false, isLoading: false });
           return false;
         }
       },
 
-      // Logout
+      // ✅ Logout - limpiar datos persistentes
       logout: async () => {
         try {
           await api.post('/auth/logout');
         } catch (error) {
           console.log('Error en logout:', error);
         } finally {
-          set({ user: null, isAuthenticated: false });
+          // ✅ Limpiar datos persistentes
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            isLoading: false
+          });
         }
       },
 
-      // Reset store
+      // ✅ Logout forzado (para token expirado)
+      forceLogout: () => {
+        set({ 
+          user: null, 
+          isAuthenticated: false,
+          isLoading: false
+        });
+      },
+
+      // Reset completo
       reset: () => set({
         user: null,
         isAuthenticated: false,
