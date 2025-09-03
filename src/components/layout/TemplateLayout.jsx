@@ -1,17 +1,7 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Home, Settings, User, LogOut, Users, FileText, Database, Upload, BarChart3, Cog, Building2, Bell, Edit3, MapPin, Check } from 'lucide-react';
-
-// Simulando contextos para el ejemplo
-const useAuth = () => ({
-  user: { 
-    name: 'Dr. Juan Martín Castro',
-    email: 'jmartincastroa@gmail.com',
-    username: '71642131'
-  },
-  logout: () => console.log('Logout')
-});
-
-const useNavigate = () => (path) => console.log(`Navigate to: ${path}`);
+import React, { useState, useMemo } from 'react';
+import { ChevronDown, ChevronRight, Home, Settings, User, LogOut, Users, FileText, Database, Upload, BarChart3, Cog, Building2, Bell, Edit3, MapPin, Check, Calendar, CalendarClock, CreditCard, BarChart2 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Dashboard' }) => {
   const navigate = useNavigate();
@@ -21,68 +11,122 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
   const [selectedConsultorio, setSelectedConsultorio] = useState('consultorio-1');
   const [consultorioModal, setConsultorioModal] = useState(false);
 
-  // Lista de consultorios - personaliza según tu sistema
-  const consultorios = [
-    { id: 'consultorio-1', name: 'Consultorio General', location: 'Piso 1 - A' },
-    { id: 'consultorio-2', name: 'Consultorio Pediatría', location: 'Piso 2 - B' },
-    { id: 'consultorio-3', name: 'Consultorio Cardiología', location: 'Piso 3 - C' },
-    { id: 'consultorio-4', name: 'Consultorio Emergencia', location: 'Piso 1 - E' }
-  ];
+  // Mapeo de iconos por nombre
+  const iconMap = {
+    Home,
+    Calendar,
+    CalendarClock,
+    Users,
+    FileText,
+    CreditCard,
+    BarChart2,
+    BarChart3,
+    Settings,
+    Cog,
+    Database,
+    Upload,
+    User,
+    Building2
+  };
 
-  // Configuración del menú
-  const menuItems = [
-    {
+  // Lista de consultorios - ahora usando datos reales del usuario
+  const consultorios = useMemo(() => {
+    if (user?.consultorios_usuario && user.consultorios_usuario.length > 0) {
+      return user.consultorios_usuario.map(consultorio => ({
+        id: consultorio.consultorio_id,
+        name: consultorio.nombre,
+        location: consultorio.direccion || 'Sin dirección'
+      }));
+    }
+    
+    // Si no hay consultorios específicos, usar todos los consultorios disponibles
+    if (user?.todos_consultorios && user.todos_consultorios.length > 0) {
+      return user.todos_consultorios.map(consultorio => ({
+        id: consultorio.id,
+        name: consultorio.nombre,
+        location: consultorio.direccion || 'Sin dirección'
+      }));
+    }
+    
+    // Fallback para cuando no hay consultorios
+    return [
+      { id: 'general', name: 'Consultorio General', location: 'Principal' }
+    ];
+  }, [user?.consultorios_usuario, user?.todos_consultorios]);
+
+  // Generar menú dinámicamente desde los datos del usuario
+  const menuItems = useMemo(() => {
+    if (!user?.menu_modulos || user.menu_modulos.length === 0) {
+      // Fallback al dashboard si no hay módulos
+      return [{
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: Home,
+        route: '/dashboard',
+        submenu: null,
+        orden: 0
+      }];
+    }
+
+    // Construir menú dinámico
+    const dynamicMenu = [];
+
+    // Siempre agregar Dashboard al inicio
+    dynamicMenu.push({
       id: 'dashboard',
       label: 'Dashboard',
       icon: Home,
       route: '/dashboard',
-      submenu: null
-    },
-    {
-      id: 'roles',
-      label: 'Roles',
-      icon: Users,
-      submenu: [
-        { id: 'gestion-roles', label: 'Gestión de Roles', route: '/dashboard/roles/gestion' },
-        { id: 'asignacion-permisos', label: 'Asignación Permisos', route: '/dashboard/roles/permisos' }
-      ]
-    },
-    {
-      id: 'usuarios',
-      label: 'Usuarios',
-      icon: User,
-      route: '/dashboard/usuarios',
-      submenu: null
-    },
-    {
-      id: 'importar',
-      label: 'Importar',
-      icon: Upload,
-      route: '/dashboard/importar',
-      submenu: null
-    },
-    {
-      id: 'reportes',
-      label: 'Reportes',
-      icon: BarChart3,
-      route: '/dashboard/reportes',
-      submenu: null
-    },
-    {
-      id: 'tableros',
-      label: 'Tableros',
-      icon: Database,
-      route: '/dashboard/tableros',
-      submenu: null
-    },
-    {
-      id: 'sistema',
-      label: 'Sistema',
-      icon: Cog,
-      route: '/dashboard/sistema',
-      submenu: null
-    }
-  ];
+      submenu: null,
+      orden: 0
+    });
+
+    // Procesar módulos del usuario
+    user.menu_modulos
+      .sort((a, b) => a.orden - b.orden) // Ordenar por campo orden
+      .forEach(modulo => {
+        const IconComponent = iconMap[modulo.icono] || Settings; // Fallback a Settings si no encuentra el icono
+
+        // Determinar si es un módulo padre o hijo
+        if (!modulo.modulo_padre_id) {
+          // Es un módulo principal
+          const menuItem = {
+            id: modulo.nombre.toLowerCase().replace(/\s+/g, '-'),
+            label: modulo.nombre,
+            icon: IconComponent,
+            route: modulo.ruta,
+            submenu: null,
+            orden: modulo.orden,
+            modulo_id: modulo.modulo_id
+          };
+
+          // Buscar submódulos hijos
+          const submodulos = user.menu_modulos.filter(
+            sub => sub.modulo_padre_id === modulo.modulo_id
+          ).sort((a, b) => a.orden - b.orden);
+
+          if (submodulos.length > 0) {
+            menuItem.submenu = submodulos.map(submodulo => ({
+              id: submodulo.nombre.toLowerCase().replace(/\s+/g, '-'),
+              label: submodulo.nombre,
+              route: submodulo.ruta,
+              modulo_id: submodulo.modulo_id
+            }));
+          }
+
+          dynamicMenu.push(menuItem);
+        }
+      });
+
+    return dynamicMenu.sort((a, b) => a.orden - b.orden);
+  }, [user?.menu_modulos]);
+
+  // Verificar permisos para mostrar elementos del menú
+  const hasPermission = (moduleName, action = 'READ') => {
+    if (!user?.permisos_lista) return false;
+    const permission = `${moduleName}:${action}`;
+    return user.permisos_lista.includes(permission) || user.es_superadmin;
+  };
 
   const toggleSubmenu = (menuId) => {
     setOpenSubmenu(openSubmenu === menuId ? null : menuId);
@@ -99,40 +143,38 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
     navigate('/login', { replace: true });
   };
 
-  // Obtener iniciales del usuario (2 del primer nombre + 1 del apellido)
+  // Obtener iniciales del usuario
   const getUserInitials = () => {
-    if (user?.name) {
-      const nameParts = user.name.trim().split(' ');
-      if (nameParts.length >= 2) {
-        const firstName = nameParts[0];
-        const lastName = nameParts[nameParts.length - 1];
-        return (firstName.substring(0, 2) + lastName.substring(0, 1)).toUpperCase();
-      }
-      return user.name.substring(0, 2).toUpperCase();
+    if (user?.usuario?.first_name && user?.usuario?.last_name) {
+      return (user.usuario.first_name.charAt(0) + user.usuario.last_name.charAt(0)).toUpperCase();
     }
-    if (user?.username) {
-      return user.username.substring(0, 2).toUpperCase();
+    if (user?.usuario?.username) {
+      return user.usuario.username.substring(0, 2).toUpperCase();
     }
-    if (user?.email) {
-      return user.email.substring(0, 2).toUpperCase();
+    if (user?.usuario?.email) {
+      return user.usuario.email.substring(0, 2).toUpperCase();
     }
     return 'US';
   };
 
   const getUserDisplayName = () => {
-    return user?.name || user?.username || user?.email || 'Usuario';
+    if (user?.usuario?.first_name && user?.usuario?.last_name) {
+      return `${user.usuario.first_name} ${user.usuario.last_name}`;
+    }
+    return user?.usuario?.username || user?.usuario?.email || 'Usuario';
   };
 
   const getSelectedConsultorioInfo = () => {
-    return consultorios.find(c => c.id === selectedConsultorio) || consultorios[0];
+    const consultorio = consultorios.find(c => c.id === selectedConsultorio);
+    return consultorio || consultorios[0] || { name: 'Sin consultorio', location: '' };
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-hidden"> {/* Agregado overflow-hidden */}
+    <div className="min-h-screen bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
-      <div className="w-56 bg-white border-r border-gray-200 flex flex-col h-screen overflow-hidden"> {/* Agregado overflow-hidden */}
+      <div className="w-56 bg-white border-r border-gray-200 flex flex-col h-screen overflow-hidden">
         {/* Logo */}
-        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0"> {/* Agregado flex-shrink-0 */}
+        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center h-8">
             <div className="w-8 h-8 bg-blue-600 rounded mr-3 flex items-center justify-center">
               <span className="text-white text-sm font-bold">H</span>
@@ -141,76 +183,86 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
           </div>
         </div>
 
+        {/* Menu dinámico - con scroll interno */}
+        <nav className="py-1 flex-1 overflow-y-auto">
+          {menuItems.map((item) => {
+            // Verificar permisos para el módulo (excepto dashboard)
+            const canAccess = item.id === 'dashboard' || hasPermission(item.label);
+            
+            if (!canAccess) return null;
 
-        
-        {/* Menu - con scroll interno */}
-        <nav className="py-1 flex-1 overflow-y-auto"> {/* Agregado overflow-y-auto */}
-          {menuItems.map((item) => (
-            <div key={item.id} className="mb-0">
-              <div
-                className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-all duration-200 ${
-                  activeMenu === item.id 
-                    ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`} /* Removido: || (item.submenu && openSubmenu === item.id) */
-                onClick={() => {
-                  if (item.submenu) {
-                    toggleSubmenu(item.id);
-                  } else {
-                    handleMenuClick(item.id, item.route);
-                    setOpenSubmenu(null);
-                  }
-                }}
-              >
-                <div className="flex items-center">
-                  <item.icon className="w-4 h-4 mr-3" />
-                  <span className="font-medium">{item.label}</span>
+            return (
+              <div key={item.id} className="mb-0">
+                <div
+                  className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-all duration-200 ${
+                    activeMenu === item.id 
+                      ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600 font-medium'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                  onClick={() => {
+                    if (item.submenu) {
+                      toggleSubmenu(item.id);
+                    } else {
+                      handleMenuClick(item.id, item.route);
+                      setOpenSubmenu(null);
+                    }
+                  }}
+                >
+                  <div className="flex items-center">
+                    <item.icon className="w-4 h-4 mr-3" />
+                    <span className="font-medium">{item.label}</span>
+                  </div>
+                  {item.submenu && (
+                    <ChevronRight
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        openSubmenu === item.id ? 'rotate-90' : ''
+                      }`}
+                    />
+                  )}
                 </div>
-                {item.submenu && (
-                  <ChevronRight
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      openSubmenu === item.id ? 'rotate-90' : ''
-                    }`}
-                  />
+                
+                {/* Submenu */}
+                {item.submenu && openSubmenu === item.id && (
+                  <div className="bg-gray-25">
+                    {item.submenu.map((subItem) => {
+                      // También verificar permisos en submenu
+                      const canAccessSub = hasPermission(subItem.label);
+                      if (!canAccessSub) return null;
+
+                      return (
+                        <div
+                          key={subItem.id}
+                          className={`flex items-center pl-4 pr-4 py-2 text-sm cursor-pointer transition-colors ${
+                            activeMenu === subItem.id
+                              ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-medium'
+                              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                          }`}
+                          onClick={() => handleMenuClick(subItem.id, subItem.route)}
+                        >
+                          <div className="w-1 h-1 bg-current rounded-full mr-3 ml-6 opacity-60"></div>
+                          <span>{subItem.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
-              
-              {/* Submenu */}
-              {item.submenu && openSubmenu === item.id && (
-                <div className="bg-gray-25"> {/* Agregado fondo sutil para submenú */}
-                  {item.submenu.map((subItem) => (
-                    <div
-                      key={subItem.id}
-                      className={`flex items-center pl-4 pr-4 py-2 text-sm cursor-pointer transition-colors ${
-                        activeMenu === subItem.id
-                          ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-medium'
-                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                      }`}
-                      onClick={() => handleMenuClick(subItem.id, subItem.route)}
-                    >
-                      <div className="w-1 h-1 bg-current rounded-full mr-3 ml-6 opacity-60"></div>
-                      <span>{subItem.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </nav>
         
         {/* Bottom User Section */}
-         <div className="border-t border-gray-200 p-4 mt-auto">
+        <div className="border-t border-gray-200 p-4 mt-auto">
           <div className="flex items-center justify-between">
-            {/* Solo avatar y nombre */}
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">{getUserInitials()}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
+                <p className="text-xs text-blue-600 truncate">{user?.rol_global?.nombre}</p>
               </div>
             </div>
-            {/* Botón de logout más grande */}
             <button 
               className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               title="Cerrar sesión"
@@ -220,94 +272,92 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
             </button>
           </div>
         </div>
-
-
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden"> {/* Agregado overflow-hidden */}
-        {/* Header Simplificado */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 flex-shrink-0">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-6">
               <h1 className="text-xl font-semibold text-gray-800">{currentPage}</h1>
               
-              {/* Selector de Consultorio como Label con Modal */}
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg px-3 py-1.5 shadow-sm">
-                  <Building2 className="w-4 h-4 mr-2 text-blue-700" />
-                  <span className="font-semibold text-blue-800 text-sm">{getSelectedConsultorioInfo().name}</span>
-                  <button
-                    onClick={() => setConsultorioModal(true)}
-                    className="ml-2 p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded transition-colors"
-                    title="Cambiar consultorio"
-                  >
-                    <Edit3 className="w-3 h-3" />
-                  </button>
+              {/* Selector de Consultorio */}
+              {consultorios.length > 1 && (
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg px-3 py-1.5 shadow-sm">
+                    <Building2 className="w-4 h-4 mr-2 text-blue-700" />
+                    <span className="font-semibold text-blue-800 text-sm">{getSelectedConsultorioInfo().name}</span>
+                    <button
+                      onClick={() => setConsultorioModal(true)}
+                      className="ml-2 p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded transition-colors"
+                      title="Cambiar consultorio"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-3">
-              {/* Icono de Notificaciones */}
+              {/* Notificaciones */}
               <button className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                 <Bell className="w-5 h-5" />
-                {/* Badge de notificaciones */}
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   3
                 </span>
               </button>
             
-            {/* User Menu - Solo Avatar */}
-            <div className="relative">
-              <button
-                className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                onClick={() => setUserDropdown(!userDropdown)}
-                title={`${getUserDisplayName()} - ${user?.email}`}
-              >
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">{getUserInitials()}</span>
-                </div>
-                <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
-              </button>
-              
-              {/* Dropdown Menu */}
-              {userDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  {/* Info del usuario en dropdown */}
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium">{getUserInitials()}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
-                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                        <p className="text-xs text-blue-600 truncate">{getSelectedConsultorioInfo().name}</p>
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  className="flex items-center p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => setUserDropdown(!userDropdown)}
+                  title={`${getUserDisplayName()} - ${user?.usuario?.email}`}
+                >
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">{getUserInitials()}</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {userDropdown && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-3 border-b border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-medium">{getUserInitials()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.usuario?.email}</p>
+                          <p className="text-xs text-blue-600 truncate">{user?.rol_global?.nombre}</p>
+                        </div>
                       </div>
                     </div>
+                    
+                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors">
+                      <User className="w-4 h-4 mr-3" />
+                      Perfil
+                    </button>
+                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors">
+                      <Settings className="w-4 h-4 mr-3" />
+                      Configuración
+                    </button>
+                    <hr className="my-2 border-gray-200" />
+                    <button 
+                      className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left transition-colors"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4 mr-3" />
+                      Cerrar Sesión
+                    </button>
                   </div>
-                  
-                  <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors">
-                    <User className="w-4 h-4 mr-3" />
-                    Perfil
-                  </button>
-                  <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors">
-                    <Settings className="w-4 h-4 mr-3" />
-                    Configuración
-                  </button>
-                  <hr className="my-2 border-gray-200" />
-                  <button 
-                    className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left transition-colors"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4 mr-3" />
-                    Cerrar Sesión
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
           </div>
         </header>
 
@@ -385,7 +435,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
           className="fixed inset-0 z-40"
           onClick={() => {
             setUserDropdown(false);
-            if (!consultorioModal) setConsultorioModal(false); // No cerrar modal con overlay
+            if (!consultorioModal) setConsultorioModal(false);
           }}
         ></div>
       )}

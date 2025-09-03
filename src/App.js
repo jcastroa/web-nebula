@@ -76,7 +76,7 @@
 
 // export default App;
 
-// src/App.js - ACTUALIZADO CON LAYOUT WRAPPER
+// src/App.js - ACTUALIZADO CON RUTAS DINÁMICAS
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -91,50 +91,51 @@ import Dashboard from './pages/Dashboard';
 // Wrapper que aplica el Layout automáticamente a las rutas protegidas
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
+  const { user } = useAuth();
   
-  // Mapear rutas a configuración del menú
+  // Función para obtener configuración de página basada en módulos del usuario
   const getPageConfig = () => {
     const path = location.pathname;
     
-    const pageConfigs = {
-      '/dashboard': { 
+    // Dashboard siempre disponible
+    if (path === '/dashboard' || path === '/') {
+      return { 
         activeMenu: 'dashboard', 
         currentPage: 'Dashboard' 
-      },
-      '/dashboard/usuarios': { 
-        activeMenu: 'usuarios', 
-        currentPage: 'Gestión de Usuarios' 
-      },
-      '/dashboard/roles/gestion': { 
-        activeMenu: 'gestion-roles', 
-        currentPage: 'Gestión de Roles' 
-      },
-      '/dashboard/roles/permisos': { 
-        activeMenu: 'asignacion-permisos', 
-        currentPage: 'Asignación de Permisos' 
-      },
-      '/dashboard/reportes': { 
-        activeMenu: 'reportes', 
-        currentPage: 'Reportes' 
-      },
-      '/dashboard/importar': { 
-        activeMenu: 'importar', 
-        currentPage: 'Importar Datos' 
-      },
-      '/dashboard/tableros': { 
-        activeMenu: 'tableros', 
-        currentPage: 'Tableros de Control' 
-      },
-      '/dashboard/sistema': { 
-        activeMenu: 'sistema', 
-        currentPage: 'Configuración del Sistema' 
-      }
-      // Agregar más rutas aquí según necesites
-    };
+      };
+    }
     
-    return pageConfigs[path] || { 
+    // Buscar en los módulos del usuario
+    if (user?.menu_modulos) {
+      // Buscar módulo que coincida con la ruta actual
+      const currentModule = user.menu_modulos.find(modulo => 
+        modulo.ruta === path || path.startsWith(modulo.ruta + '/')
+      );
+      
+      if (currentModule) {
+        return {
+          activeMenu: currentModule.nombre.toLowerCase().replace(/\s+/g, '-'),
+          currentPage: currentModule.nombre
+        };
+      }
+      
+      // Si no encuentra coincidencia exacta, buscar por prefijo de ruta
+      const moduleByPrefix = user.menu_modulos.find(modulo => 
+        path.startsWith(modulo.ruta.split('/')[1] ? '/' + modulo.ruta.split('/')[1] : modulo.ruta)
+      );
+      
+      if (moduleByPrefix) {
+        return {
+          activeMenu: moduleByPrefix.nombre.toLowerCase().replace(/\s+/g, '-'),
+          currentPage: moduleByPrefix.nombre
+        };
+      }
+    }
+    
+    // Fallback para rutas no encontradas
+    return { 
       activeMenu: 'dashboard', 
-      currentPage: 'Dashboard' 
+      currentPage: 'Página' 
     };
   };
   
@@ -151,7 +152,7 @@ const LayoutWrapper = ({ children }) => {
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // ✅ Mostrar loading mientras verifica auth
+  // Mostrar loading mientras verifica auth
   if (isLoading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
@@ -170,11 +171,11 @@ const PrivateRoute = ({ children }) => {
   ) : <Navigate to="/login" replace />;
 };
 
-// Rutas públicas SIN Layout (como antes)
+// Rutas públicas SIN Layout
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // ✅ Mostrar loading mientras verifica auth
+  // Mostrar loading mientras verifica auth
   if (isLoading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
@@ -188,6 +189,23 @@ const PublicRoute = ({ children }) => {
   
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 };
+
+// Componente para páginas que aún no están implementadas
+const ComingSoon = ({ moduleName }) => (
+  <div className="max-w-7xl mx-auto">
+    <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span className="text-blue-600 text-2xl">🚧</span>
+      </div>
+      <h2 className="text-xl font-semibold text-gray-800 mb-2">
+        {moduleName} - Próximamente
+      </h2>
+      <p className="text-gray-600">
+        Esta funcionalidad está en desarrollo y estará disponible pronto.
+      </p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
@@ -215,27 +233,71 @@ function App() {
           } 
         />
         
-        {/* Rutas adicionales - CON Layout automático (para cuando las agregues) */}
-        {/* 
+        {/* Rutas dinámicas para los módulos - Páginas temporales */}
         <Route 
-          path="/dashboard/usuarios" 
+          path="/citas" 
           element={
             <PrivateRoute>
-              <Usuarios />
+              <ComingSoon moduleName="Citas" />
             </PrivateRoute>
           } 
         />
         
         <Route 
-          path="/dashboard/roles/gestion" 
+          path="/agenda" 
           element={
             <PrivateRoute>
-              <GestionRoles />
+              <ComingSoon moduleName="Agenda" />
             </PrivateRoute>
           } 
         />
-        */}
         
+        <Route 
+          path="/pacientes" 
+          element={
+            <PrivateRoute>
+              <ComingSoon moduleName="Pacientes" />
+            </PrivateRoute>
+          } 
+        />
+        
+        <Route 
+          path="/historia-clinica" 
+          element={
+            <PrivateRoute>
+              <ComingSoon moduleName="Historia Clínica" />
+            </PrivateRoute>
+          } 
+        />
+        
+        <Route 
+          path="/pagos" 
+          element={
+            <PrivateRoute>
+              <ComingSoon moduleName="Pagos" />
+            </PrivateRoute>
+          } 
+        />
+        
+        <Route 
+          path="/reportes" 
+          element={
+            <PrivateRoute>
+              <ComingSoon moduleName="Reportes" />
+            </PrivateRoute>
+          } 
+        />
+        
+        <Route 
+          path="/configuracion" 
+          element={
+            <PrivateRoute>
+              <ComingSoon moduleName="Configuración" />
+            </PrivateRoute>
+          } 
+        />
+        
+        {/* Catch-all para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>

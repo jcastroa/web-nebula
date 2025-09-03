@@ -168,6 +168,31 @@ export const useAuthStore = create(
         });
       },
 
+      // Funciones de utilidad para acceder a datos específicos
+      getUserInfo: () => get().user?.usuario,
+      
+      getGlobalRole: () => get().user?.rol_global,
+      
+      getPermissions: () => get().user?.permisos_lista || [],
+      
+      hasPermission: (moduleName, action = 'READ') => {
+        const state = get();
+        if (!state.user?.permisos_lista) return false;
+        
+        const permission = `${moduleName}:${action}`;
+        return state.user.permisos_lista.includes(permission) || state.user.es_superadmin;
+      },
+      
+      isSuperAdmin: () => get().user?.es_superadmin || false,
+      
+      getCurrentConsultorio: () => get().user?.consultorio_contexto_actual,
+      
+      getUserConsultorios: () => get().user?.consultorios_usuario || [],
+      
+      getAllConsultorios: () => get().user?.todos_consultorios || [],
+      
+      getMenuModules: () => get().user?.menu_modulos || [],
+
       // Reset completo
       reset: () => set({
         user: null,
