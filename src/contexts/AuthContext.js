@@ -68,6 +68,38 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const contextValue = {
+    // Estado
+    user: store.user,
+    isAuthenticated: store.isAuthenticated,
+    isLoading: store.isLoading,
+    sessionId: store.sessionId,
+    csrfToken: store.csrfToken,
+    expiresIn: store.expiresIn,
+    
+    // Acciones principales
+    login: store.login,
+    logout: store.logout,
+    checkAuth: store.checkAuth,
+    forceLogout: store.forceLogout,
+    setUser: store.setUser,
+    reset: store.reset,
+    
+    // ✅ Nueva función de cambio de consultorio
+    cambiarConsultorio: store.cambiarConsultorio,
+    
+    // Funciones de utilidad
+    getUserInfo: store.getUserInfo,
+    getGlobalRole: store.getGlobalRole,
+    getPermissions: store.getPermissions,
+    hasPermission: store.hasPermission,
+    isSuperAdmin: store.isSuperAdmin,
+    getCurrentConsultorio: store.getCurrentConsultorio,
+    getUserConsultorios: store.getUserConsultorios,
+    getAllConsultorios: store.getAllConsultorios,
+    getMenuModules: store.getMenuModules
+  };
+
   return (
     <AuthContext.Provider value={store}>
       {children}

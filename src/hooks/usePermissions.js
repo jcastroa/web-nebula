@@ -17,7 +17,7 @@ export const usePermissions = () => {
       
       // Permisos y roles
       permissions: user.permisos_lista || [],
-      activeRoles: user.roles_activos || [],
+      activeRole: user.rol_activo || null,
       
       // Consultorios
       currentConsultorio: user.consultorio_contexto_actual,

@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../services/api';
-import { processValidationErrors } from '../utils/errorUtils';
+
 
 // Función para obtener info del dispositivo
 const getDeviceInfo = () => {
@@ -166,6 +166,57 @@ export const useAuthStore = create(
           isAuthenticated: false,
           isLoading: false
         });
+      },
+
+      // ✅ NUEVA FUNCIÓN: Cambiar consultorio
+      cambiarConsultorio: async (consultorioId) => {
+        console.log('🏥 Cambiando consultorio a:', consultorioId);
+        
+        // ✅ Mostrar loading durante el cambio
+        set({ isLoading: true });
+        
+        try {
+          const response = await api.post('/auth/cambiar-consultorio', {
+            consultorio_id: parseInt(consultorioId) // Asegurar que sea número
+          });
+
+          console.log('✅ Consultorio cambiado exitosamente:', response.data);
+          
+          // Actualizar el store con la nueva data del usuario
+          const updatedData = response.data;
+          
+          if (updatedData.success && updatedData.user) {
+            set({ 
+              user: updatedData.user,
+              isAuthenticated: true,
+              isLoading: false // ✅ Quitar loading
+            });
+            
+            console.log('🔄 Store actualizado con nuevo consultorio');
+            return { 
+              success: true, 
+              message: updatedData.message,
+              user: updatedData.user 
+            };
+          } else {
+            console.log('❌ Respuesta sin datos de usuario válidos');
+            set({ isLoading: false }); // ✅ Quitar loading en error
+            return { 
+              success: false, 
+              error: 'Respuesta inválida del servidor' 
+            };
+          }
+
+        } catch (error) {
+          console.log('❌ Error cambiando consultorio:', error.response?.data);
+          set({ isLoading: false }); // ✅ Quitar loading en error
+          
+          return { 
+            success: false, 
+            error: error.response?.data?.detail || 'Error cambiando consultorio',
+            status: error.response?.status
+          };
+        }
       },
 
       // Funciones de utilidad para acceder a datos específicos

@@ -5,11 +5,19 @@ import { useNavigate } from 'react-router-dom';
 
 const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Dashboard' }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, cambiarConsultorio } = useAuth();
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [userDropdown, setUserDropdown] = useState(false);
-  const [selectedConsultorio, setSelectedConsultorio] = useState('consultorio-1');
   const [consultorioModal, setConsultorioModal] = useState(false);
+  const [isChangingConsultorio, setIsChangingConsultorio] = useState(false);
+
+
+  // ✅ Selección inicial inteligente basada en el usuario actual
+  const [selectedConsultorio, setSelectedConsultorio] = useState(() => {
+    return user?.ultimo_consultorio_activo ||
+      user?.consultorio_contexto_actual || 
+           user?.consultorio_principal?.id ;
+  });
 
   // Mapeo de iconos por nombre
   const iconMap = {
@@ -38,16 +46,16 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
         location: consultorio.direccion || 'Sin dirección'
       }));
     }
-    
+
     // Si no hay consultorios específicos, usar todos los consultorios disponibles
     if (user?.todos_consultorios && user.todos_consultorios.length > 0) {
       return user.todos_consultorios.map(consultorio => ({
-        id: consultorio.id,
+        id: consultorio.consultorio_id,
         name: consultorio.nombre,
         location: consultorio.direccion || 'Sin dirección'
       }));
     }
-    
+
     // Fallback para cuando no hay consultorios
     return [
       { id: 'general', name: 'Consultorio General', location: 'Principal' }
@@ -165,8 +173,91 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
   };
 
   const getSelectedConsultorioInfo = () => {
+    // ✅ PRIMERO: Obtener el ID del consultorio actual
+    const currentConsultorioId = user?.ultimo_consultorio_activo ||
+      user?.consultorio_contexto_actual ||
+      user?.consultorio_principal?.id;
+
+      console.log('🏥 Consultorios disponibles:', consultorios);
+      console.log('🏥 Consultorio seleccionado:', selectedConsultorio);
+
+    // ✅ SEGUNDO: Buscar el objeto completo en el array de consultorios
+    if (currentConsultorioId) {
+      const currentConsultorio = consultorios.find(c => c.id === currentConsultorioId);
+
+      if (currentConsultorio) {
+        return {
+          id: currentConsultorio.id,
+          name: currentConsultorio.name,
+          location: currentConsultorio.location
+        };
+      }
+    }
+
+    // Fallback a la lista de consultorios disponibles
     const consultorio = consultorios.find(c => c.id === selectedConsultorio);
     return consultorio || consultorios[0] || { name: 'Sin consultorio', location: '' };
+  };
+
+  const getCurrentRoleName = () => {
+    // Si es super admin, mostrar rol global
+    if (user?.es_superadmin) {
+      return user?.rol_global?.nombre || 'Super Admin';
+    }
+
+    // Obtener el ID del consultorio actual
+    const currentConsultorioId = user?.ultimo_consultorio_activo ||
+                                 user?.consultorio_contexto_actual;
+    
+    // Buscar el rol específico para ese consultorio
+    if (currentConsultorioId && user?.consultorios_usuario) {
+      const consultorioData = user.consultorios_usuario.find(
+        c => c.consultorio_id === currentConsultorioId
+      );
+      
+      if (consultorioData?.rol_nombre) {
+        return consultorioData.rol_nombre;
+      }
+    }
+    
+    // Fallback al rol global si no encuentra rol específico
+    return user?.rol_global?.nombre || 'Usuario';
+  };
+
+  const handleConsultorioChange = async (consultorioId) => {
+    if (isChangingConsultorio) return; // Evitar múltiples clicks
+
+    setIsChangingConsultorio(true);
+
+    try {
+      console.log('🏥 Cambiando a consultorio:', consultorioId);
+
+      const result = await cambiarConsultorio(consultorioId);
+
+      if (result.success) {
+        console.log('✅ Consultorio cambiado exitosamente');
+
+        // Actualizar selección local
+        setSelectedConsultorio(consultorioId);
+
+        // Cerrar modal
+        setConsultorioModal(false);
+
+        // Opcional: Mostrar notificación de éxito
+        // toast.success('Consultorio cambiado exitosamente');
+
+      } else {
+        console.error('❌ Error cambiando consultorio:', result.error);
+        // Opcional: Mostrar notificación de error
+        // toast.error(result.error || 'Error cambiando consultorio');
+      }
+
+    } catch (error) {
+      console.error('💥 Error inesperado:', error);
+      // toast.error('Error inesperado cambiando consultorio');
+    } finally {
+      setIsChangingConsultorio(false);
+    }
   };
 
   return (
@@ -177,9 +268,9 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
         <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center h-8">
             <div className="w-8 h-8 bg-blue-600 rounded mr-3 flex items-center justify-center">
-              <span className="text-white text-sm font-bold">H</span>
+              <span className="text-white text-sm font-bold">N</span>
             </div>
-            <span className="text-gray-800 font-semibold">HISPRO</span>
+            <span className="text-gray-800 font-semibold">NEBULA</span>
           </div>
         </div>
 
@@ -188,17 +279,16 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
           {menuItems.map((item) => {
             // Verificar permisos para el módulo (excepto dashboard)
             const canAccess = item.id === 'dashboard' || hasPermission(item.label);
-            
+
             if (!canAccess) return null;
 
             return (
               <div key={item.id} className="mb-0">
                 <div
-                  className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-all duration-200 ${
-                    activeMenu === item.id 
+                  className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-all duration-200 ${activeMenu === item.id
                       ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600 font-medium'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                   onClick={() => {
                     if (item.submenu) {
                       toggleSubmenu(item.id);
@@ -214,13 +304,12 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                   </div>
                   {item.submenu && (
                     <ChevronRight
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        openSubmenu === item.id ? 'rotate-90' : ''
-                      }`}
+                      className={`w-4 h-4 transition-transform duration-200 ${openSubmenu === item.id ? 'rotate-90' : ''
+                        }`}
                     />
                   )}
                 </div>
-                
+
                 {/* Submenu */}
                 {item.submenu && openSubmenu === item.id && (
                   <div className="bg-gray-25">
@@ -232,11 +321,10 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                       return (
                         <div
                           key={subItem.id}
-                          className={`flex items-center pl-4 pr-4 py-2 text-sm cursor-pointer transition-colors ${
-                            activeMenu === subItem.id
+                          className={`flex items-center pl-4 pr-4 py-2 text-sm cursor-pointer transition-colors ${activeMenu === subItem.id
                               ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-medium'
                               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                          }`}
+                            }`}
                           onClick={() => handleMenuClick(subItem.id, subItem.route)}
                         >
                           <div className="w-1 h-1 bg-current rounded-full mr-3 ml-6 opacity-60"></div>
@@ -250,7 +338,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
             );
           })}
         </nav>
-        
+
         {/* Bottom User Section */}
         <div className="border-t border-gray-200 p-4 mt-auto">
           <div className="flex items-center justify-between">
@@ -260,10 +348,10 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
-                <p className="text-xs text-blue-600 truncate">{user?.rol_global?.nombre}</p>
+                <p className="text-xs text-blue-600 truncate">{getCurrentRoleName()}</p>
               </div>
             </div>
-            <button 
+            <button
               className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               title="Cerrar sesión"
               onClick={handleLogout}
@@ -281,7 +369,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-6">
               <h1 className="text-xl font-semibold text-gray-800">{currentPage}</h1>
-              
+
               {/* Selector de Consultorio */}
               {consultorios.length > 1 && (
                 <div className="flex items-center space-x-2">
@@ -299,7 +387,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {/* Notificaciones */}
               <button className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
@@ -308,7 +396,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                   3
                 </span>
               </button>
-            
+
               {/* User Menu */}
               <div className="relative">
                 <button
@@ -321,7 +409,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
                 </button>
-                
+
                 {/* Dropdown Menu */}
                 {userDropdown && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
@@ -333,11 +421,11 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">{getUserDisplayName()}</p>
                           <p className="text-xs text-gray-500 truncate">{user?.usuario?.email}</p>
-                          <p className="text-xs text-blue-600 truncate">{user?.rol_global?.nombre}</p>
+                          <p className="text-xs text-blue-600 truncate">{getCurrentRoleName()}</p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors">
                       <User className="w-4 h-4 mr-3" />
                       Perfil
@@ -347,7 +435,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                       Configuración
                     </button>
                     <hr className="my-2 border-gray-200" />
-                    <button 
+                    <button
                       className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 w-full text-left transition-colors"
                       onClick={handleLogout}
                     >
@@ -378,31 +466,29 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                   </button>
                 </div>
               </div>
-              
+
               <div className="p-6">
                 <div className="space-y-3">
                   {consultorios.map((consultorio) => (
                     <div
                       key={consultorio.id}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedConsultorio === consultorio.id
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedConsultorio === consultorio.id
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
-                      }`}
+                        } ${isChangingConsultorio ? 'opacity-50 cursor-not-allowed' : ''}`}
                       onClick={() => {
-                        setSelectedConsultorio(consultorio.id);
-                        setConsultorioModal(false);
+                        if (!isChangingConsultorio) {
+                          handleConsultorioChange(consultorio.id);
+                        }
                       }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <Building2 className={`w-5 h-5 ${
-                            selectedConsultorio === consultorio.id ? 'text-blue-600' : 'text-gray-400'
-                          }`} />
+                          <Building2 className={`w-5 h-5 ${selectedConsultorio === consultorio.id ? 'text-blue-600' : 'text-gray-400'
+                            }`} />
                           <div>
-                            <p className={`font-medium ${
-                              selectedConsultorio === consultorio.id ? 'text-blue-800' : 'text-gray-800'
-                            }`}>
+                            <p className={`font-medium ${selectedConsultorio === consultorio.id ? 'text-blue-800' : 'text-gray-800'
+                              }`}>
                               {consultorio.name}
                             </p>
                             <p className="text-xs text-gray-500 flex items-center mt-1">
@@ -411,13 +497,26 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                             </p>
                           </div>
                         </div>
-                        {selectedConsultorio === consultorio.id && (
+                        {isChangingConsultorio && selectedConsultorio === consultorio.id ? (
+                          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        ) : selectedConsultorio === consultorio.id ? (
                           <Check className="w-5 h-5 text-blue-600" />
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   ))}
                 </div>
+
+
+                {/* Texto informativo durante el cambio */}
+                {isChangingConsultorio && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 text-center">
+                      Cambiando consultorio... Por favor espera.
+                    </p>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
@@ -428,7 +527,7 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
           {children}
         </main>
       </div>
-      
+
       {/* Overlay for dropdowns and modal */}
       {(userDropdown || consultorioModal) && (
         <div
