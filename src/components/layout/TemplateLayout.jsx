@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Home, Settings, User, LogOut, Users, FileText, Database, Upload, BarChart3, Cog, Building2, Bell, Edit3, MapPin, Check, Calendar, CalendarClock, CreditCard, BarChart2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Zap, Bolt, Home, Settings, User, LogOut, Users, FileText, Database, Upload, BarChart3, Cog, Building2, Bell, Edit3, MapPin, Check, Calendar, CalendarClock, CreditCard, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import QuickActionsDrawer from "../../components/layout/QuickActionsDrawer";
 
 const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Dashboard' }) => {
   const navigate = useNavigate();
@@ -10,13 +11,14 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
   const [userDropdown, setUserDropdown] = useState(false);
   const [consultorioModal, setConsultorioModal] = useState(false);
   const [isChangingConsultorio, setIsChangingConsultorio] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
 
   // ✅ Selección inicial inteligente basada en el usuario actual
   const [selectedConsultorio, setSelectedConsultorio] = useState(() => {
-    return user?.ultimo_consultorio_activo ||
-      user?.consultorio_contexto_actual || 
-           user?.consultorio_principal?.id ;
+    return user?.ultimo_consultorio_activo?.id ||
+      user?.consultorio_contexto_actual ||
+      user?.consultorio_principal?.id;
   });
 
   // Mapeo de iconos por nombre
@@ -174,12 +176,12 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
 
   const getSelectedConsultorioInfo = () => {
     // ✅ PRIMERO: Obtener el ID del consultorio actual
-    const currentConsultorioId = user?.ultimo_consultorio_activo ||
+    const currentConsultorioId = user?.ultimo_consultorio_activo?.id ||
       user?.consultorio_contexto_actual ||
       user?.consultorio_principal?.id;
 
-      console.log('🏥 Consultorios disponibles:', consultorios);
-      console.log('🏥 Consultorio seleccionado:', selectedConsultorio);
+    console.log('🏥 Consultorios disponibles:', consultorios);
+    console.log('🏥 Consultorio seleccionado:', selectedConsultorio);
 
     // ✅ SEGUNDO: Buscar el objeto completo en el array de consultorios
     if (currentConsultorioId) {
@@ -205,21 +207,22 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
       return user?.rol_global?.nombre || 'Super Admin';
     }
 
-    // Obtener el ID del consultorio actual
-    const currentConsultorioId = user?.ultimo_consultorio_activo ||
-                                 user?.consultorio_contexto_actual;
-    
+    // Obtener el ID del consultorio actual    
+    const currentConsultorioId = user?.ultimo_consultorio_activo?.id ||
+      user?.consultorio_contexto_actual ||
+      user?.consultorio_principal?.id;
+
     // Buscar el rol específico para ese consultorio
     if (currentConsultorioId && user?.consultorios_usuario) {
       const consultorioData = user.consultorios_usuario.find(
         c => c.consultorio_id === currentConsultorioId
       );
-      
+
       if (consultorioData?.rol_nombre) {
         return consultorioData.rol_nombre;
       }
     }
-    
+
     // Fallback al rol global si no encuentra rol específico
     return user?.rol_global?.nombre || 'Usuario';
   };
@@ -286,8 +289,8 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
               <div key={item.id} className="mb-0">
                 <div
                   className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-all duration-200 ${activeMenu === item.id
-                      ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   onClick={() => {
                     if (item.submenu) {
@@ -322,8 +325,8 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                         <div
                           key={subItem.id}
                           className={`flex items-center pl-4 pr-4 py-2 text-sm cursor-pointer transition-colors ${activeMenu === subItem.id
-                              ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-medium'
-                              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                            ? 'text-blue-600 bg-blue-50 border-r-2 border-blue-600 font-medium'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                             }`}
                           onClick={() => handleMenuClick(subItem.id, subItem.route)}
                         >
@@ -389,6 +392,16 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
             </div>
 
             <div className="flex items-center space-x-3">
+              {/* Accesos Rapido */}
+              <button className="relative p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                <Zap
+                  onClick={() => setDrawerOpen(true)}
+                  className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>
+              </button>
+
+
+
               {/* Notificaciones */}
               <button className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
                 <Bell className="w-5 h-5" />
@@ -473,8 +486,8 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
                     <div
                       key={consultorio.id}
                       className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedConsultorio === consultorio.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
                         } ${isChangingConsultorio ? 'opacity-50 cursor-not-allowed' : ''}`}
                       onClick={() => {
                         if (!isChangingConsultorio) {
@@ -526,6 +539,14 @@ const TemplateLayout = ({ children, activeMenu = 'dashboard', currentPage = 'Das
         <main className="flex-1 p-6 overflow-y-auto">
           {children}
         </main>
+
+
+        {/* Drawer de accesos rápidos */}
+        <QuickActionsDrawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        />
+
       </div>
 
       {/* Overlay for dropdowns and modal */}

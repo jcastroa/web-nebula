@@ -120,7 +120,7 @@ export const useAuthStore = create(
           const user = response.data;
           console.log('👤 Usuario extraído:', user);
           
-          if (!user || !user.id) {
+          if (!user || !user.usuario.id) {
             console.log('❌ Datos de usuario inválidos - limpiando estado');
             set({ user: null, isAuthenticated: false, isLoading: false });
             return false;

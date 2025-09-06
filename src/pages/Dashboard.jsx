@@ -1,155 +1,193 @@
-// src/pages/Dashboard.jsx - ACTUALIZADO PARA USAR EL LAYOUT WRAPPER
+// components/Dashboard.jsx
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Users, BarChart3, FileText, Database, User, Upload } from 'lucide-react';
+import { 
+  Calendar, 
+  FileText, 
+  Filter, 
+  Plus,
+  Clock,
+  CheckCircle,
+  Loader2,
+  CalendarCheck,
+  RefreshCw , DollarSign , CreditCard
+} from 'lucide-react';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { TabButton } from '../components/dashboard/TabButton';
+import { ActionButton } from '../components/dashboard/ActionButton';
+import { DataTable } from '../components/dashboard/DataTable';
+import { EstadisticasBadge } from '../components/dashboard/EstadisticasBadge';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { ErrorMessage } from '../components/common/ErrorMessage';
+import StatsCards from "../components/dashboard/StatsCards"; // ajusta la ruta según tu estructura
 
-const Dashboard = () => {
-  const { user } = useAuth();
+export default function Dashboard() {
+  const {
+    activeTab,
+    setActiveTab,
+    solicitudesData,
+    citasData,
+    loading,
+    error,
+    total,
+    estadisticasSolicitudes,
+    estadisticasCitas,
+    refreshData
+  } = useDashboardData();
+
+  const handleRowClick = (item) => {
+    console.log('Clicked item:', item);
+    // Aquí puedes manejar la navegación o abrir modales
+  };
+
+  const handleNewCita = () => {
+    console.log('Nueva cita clicked');
+    // Manejar creación de nueva cita
+  };
+
+  const handleFilter = () => {
+    console.log('Filter clicked');
+    // Manejar filtros
+  };
+
+  const handleVistaSemanal = () => {
+    console.log('Vista semanal clicked');
+    // Cambiar a vista semanal
+  };
+
+  const handleRefresh = () => {
+    refreshData();
+  };
+
+  const currentData = activeTab === 'solicitudes' ? solicitudesData : citasData;
   
   return (
-    // ❌ YA NO necesitas envolver con DashboardLayout - se aplica automáticamente
-    // El LayoutWrapper en App.js ya lo maneja
-    <div className="max-w-7xl mx-auto">
-      {/* Welcome Message */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-            <span className="text-orange-600 text-lg">👋</span>
-          </div>
-          <h1 className="text-lg font-semibold text-gray-800">
-            ¡Bienvenido {user?.name || user?.username || 'Usuario'}, a Hispro Web v1.0!
-          </h1>
-        </div>
-        <p className="text-gray-600 text-sm">
-          Tu Sistema de Información en Salud está aquí para ayudarte a tomar mejores decisiones. 🏥📊
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Usuarios</p>
-              <p className="text-2xl font-bold text-gray-900">1,234</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">+5.2% desde el mes pasado</p>
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+       <StatsCards />
+      {/* Navigation Tabs */}
+      <div className="flex justify-between items-center mb-6 mt-8">
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <TabButton
+            isActive={activeTab === 'solicitudes'}
+            onClick={() => setActiveTab('solicitudes')}
+            icon={FileText}
+            count={loading.solicitudes ? '...' : total.solicitudes}
+            variant="red"
+          >
+            Solicitudes
+          </TabButton>
+          <TabButton
+            isActive={activeTab === 'citas'}
+            onClick={() => setActiveTab('citas')}
+            icon={Calendar}
+            count={loading.citas ? '...' : total.citas}
+            variant="blue"
+          >
+            Citas del Día
+          </TabButton>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Reportes</p>
-              <p className="text-2xl font-bold text-gray-900">856</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <BarChart3 className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">+12.3% desde el mes pasado</p>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Archivos</p>
-              <p className="text-2xl font-bold text-gray-900">2,847</p>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <FileText className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">+3.1% desde el mes pasado</p>
-        </div>
-
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Base de Datos</p>
-              <p className="text-2xl font-bold text-gray-900">99.2%</p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Database className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">Sistema saludable</p>
+        <div className="flex gap-2">
+          <ActionButton onClick={handleRefresh} icon={RefreshCw}>
+            Actualizar
+          </ActionButton>
+          <ActionButton onClick={handleFilter} icon={Filter}>
+            Filtrar
+          </ActionButton>
+          {activeTab === 'citas' && (
+            <ActionButton onClick={handleVistaSemanal} icon={Calendar}>
+              Vista Semanal
+            </ActionButton>
+          )}
+          <ActionButton onClick={handleNewCita} icon={Plus} variant="primary">
+            Nueva Cita
+          </ActionButton>
         </div>
       </div>
 
-      {/* Actividad Reciente */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Actividad Reciente</h2>
-        <div className="space-y-4">
-          <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-              <User className="w-4 h-4 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Nuevo usuario registrado</p>
-              <p className="text-xs text-gray-500">Hace 2 minutos</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-              <Upload className="w-4 h-4 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Archivo importado exitosamente</p>
-              <p className="text-xs text-gray-500">Hace 15 minutos</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-            <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-              <BarChart3 className="w-4 h-4 text-yellow-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Reporte generado</p>
-              <p className="text-xs text-gray-500">Hace 1 hora</p>
-            </div>
-          </div>
+      {/* Content Area */}
+      {loading.current ? (
+        <div className="bg-white border border-gray-200 rounded-lg">
+          <LoadingSpinner 
+            text={`Cargando ${activeTab}...`}
+          />
         </div>
-      </div>
+      ) : error.current ? (
+        <div className="bg-white border border-gray-200 rounded-lg">
+          <ErrorMessage 
+            error={error.current}
+            onRetry={refreshData}
+            title={`Error al cargar ${activeTab}`}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Data Table */}
+          <DataTable 
+            tipo={activeTab}
+            data={currentData || []}
+            onRowClick={handleRowClick}
+          />
 
-      {/* Panel de acceso rápido */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
-          <div className="flex items-center mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg mr-3">
-              <Users className="w-5 h-5 text-blue-600" />
+          {/* Footer Stats */}
+          <div className="mt-6 flex justify-between items-center text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>
+                Mostrando <span className="font-semibold text-gray-900">
+                  {(currentData || []).length} de {total.current}
+                </span> {activeTab}.
+              </span>
+              <button className="text-blue-600 hover:text-blue-800 font-medium">
+                Ver todas
+              </button>
             </div>
-            <h3 className="font-medium text-gray-900">Gestionar Usuarios</h3>
+            
+            {/* Estadísticas */}
+            {activeTab === 'solicitudes' ? (
+              <div className="flex gap-4">
+                <EstadisticasBadge 
+                  icon={CreditCard}
+                  count={estadisticasSolicitudes.pendientes}
+                  label="Sin Pago"
+                  variant="gray"
+                />
+                <EstadisticasBadge 
+                  icon={CheckCircle}
+                  count={estadisticasSolicitudes.conPago}
+                  label="Con Pago"
+                  variant="green"
+                />
+              </div>
+            ) : (
+              <div className="flex gap-4">
+                <EstadisticasBadge 
+                  icon={CheckCircle}
+                  count={estadisticasCitas.completadas}
+                  label="Completadas"
+                  variant="green"
+                />
+                <EstadisticasBadge 
+                  icon={Loader2}
+                  count={estadisticasCitas.enProceso}
+                  label="En Proceso"
+                  variant="purple"
+                />
+                <EstadisticasBadge 
+                  icon={Clock}
+                  count={estadisticasCitas.pendientes}
+                  label="Pendientes"
+                  variant="orange"
+                />
+                <EstadisticasBadge 
+                  icon={CalendarCheck}
+                  count={estadisticasCitas.confirmadas}
+                  label="Confirmadas"
+                  variant="blue"
+                />
+              </div>
+            )}
           </div>
-          <p className="text-sm text-gray-600">Administrar usuarios y permisos del sistema</p>
-        </div>
-        
-        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
-          <div className="flex items-center mb-4">
-            <div className="p-2 bg-green-100 rounded-lg mr-3">
-              <BarChart3 className="w-5 h-5 text-green-600" />
-            </div>
-            <h3 className="font-medium text-gray-900">Ver Reportes</h3>
-          </div>
-          <p className="text-sm text-gray-600">Acceder a reportes y análisis de datos</p>
-        </div>
-        
-        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer">
-          <div className="flex items-center mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg mr-3">
-              <Upload className="w-5 h-5 text-purple-600" />
-            </div>
-            <h3 className="font-medium text-gray-900">Importar Datos</h3>
-          </div>
-          <p className="text-sm text-gray-600">Cargar nuevos datos al sistema</p>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
-};
-
-export default Dashboard;
+}
