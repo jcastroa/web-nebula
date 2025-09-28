@@ -1,38 +1,106 @@
-// components/Dashboard.jsx
-import React from 'react';
-import { 
-  Calendar, 
-  FileText, 
-  Filter, 
+// // components/Dashboard.jsx
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Calendar,
+  FileText,
+  Filter,
   Plus,
   Clock,
   CheckCircle,
   Loader2,
   CalendarCheck,
-  RefreshCw , DollarSign , CreditCard
+  RefreshCw, DollarSign, CreditCard, Timer, PhoneCall, Bell
 } from 'lucide-react';
 import { useDashboardData } from '../hooks/useDashboardData';
-import { TabButton } from '../components/dashboard/TabButton';
+// import { TabButton } from '../components/dashboard/TabButton';
 import { ActionButton } from '../components/dashboard/ActionButton';
 import { DataTable } from '../components/dashboard/DataTable';
 import { EstadisticasBadge } from '../components/dashboard/EstadisticasBadge';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { ErrorMessage } from '../components/common/ErrorMessage';
 import StatsCards from "../components/dashboard/StatsCards"; // ajusta la ruta según tu estructura
+import { TablePagination } from '../components/common/TablePagination';
+import AppointmentService from '../services/appointmentService';
+import { CriticalAlert } from '../components/dashboard/CriticalAlert'; // NUEVO
+import useWebSocket from '../hooks/useWebSocket';
+import { SmartRefreshButton } from '../components/dashboard/SmartRefreshButton'; // NUEVO
+
 
 export default function Dashboard() {
   const {
-    activeTab,
-    setActiveTab,
-    solicitudesData,
     citasData,
+    stats,
+    currentData, // ✅ Esta variable ya está en tu hook
     loading,
     error,
     total,
-    estadisticasSolicitudes,
-    estadisticasCitas,
-    refreshData
+    pagination, // ✅ Esta variable ya está en tu hook
+    loadCitas,
+    refreshData,
+    currentPageChange, // ✅ Estas funciones ya están en tu hook
+    currentItemsPerPageChange // ✅ Estas funciones ya están en tu hook
   } = useDashboardData();
+
+  // NUEVOS ESTADOS para alertas
+  const [criticalAlert, setCriticalAlert] = useState(null);
+  const [pendingUpdates, setPendingUpdates] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const codigoNegocio = 'salud_vida';
+  // WebSocket hook
+  const { wsStatus, notifications, sendMessage } = useWebSocket(codigoNegocio);
+
+  const [selectedFilter, setSelectedFilter] = useState('today');
+
+
+
+  // ESCUCHAR NOTIFICACIONES DEL WEBSOCKET
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const lastNotification = notifications[0];
+      console.log('📨 Nueva notificación:', lastNotification);
+
+      // Procesar según el tipo de notificación
+      if (lastNotification.notification_type === 'URGENT_ALERT') {
+        // Mostrar alerta crítica
+        setCriticalAlert({
+          type: 'urgent',
+          appointments: lastNotification.critical_appointments || [],
+          timestamp: lastNotification.timestamp,
+          playSound: true
+        });
+
+        // Actualizar indicador del botón
+        setPendingUpdates({
+          type: 'urgent',
+          count: lastNotification.summary?.new_critical || 1
+        });
+
+        // Actualizar stats sin refrescar tabla (opcional)
+        // if (updateStats) {
+        //   updateStats({
+        //     urgentes: (stats.urgentes || 0) + (lastNotification.summary?.new_critical || 0)
+        //   });
+        // }
+
+      } else if (lastNotification.summary?.new_appointments > 0) {
+        // Actualización normal - solo mostrar badge
+        setPendingUpdates(prev => ({
+          type: 'normal',
+          count: (prev?.count || 0) + lastNotification.summary.new_appointments
+        }));
+      } else if (lastNotification.summary?.priority_upgraded > 0) {
+        // Actualización normal - solo mostrar badge
+        setPendingUpdates(prev => ({
+          type: 'normal',
+          count: (prev?.count || 0) + lastNotification.summary.priority_upgraded
+        }));
+      }
+    }
+  }, [notifications]);
+
+
+  console.log('ESTADO SOCKET:', wsStatus);
 
   const handleRowClick = (item) => {
     console.log('Clicked item:', item);
@@ -49,55 +117,149 @@ export default function Dashboard() {
     // Manejar filtros
   };
 
-  const handleVistaSemanal = () => {
-    console.log('Vista semanal clicked');
-    // Cambiar a vista semanal
-  };
 
-  const handleRefresh = () => {
-    refreshData();
-  };
 
-  const currentData = activeTab === 'solicitudes' ? solicitudesData : citasData;
-  
+
+  const handleFilterToday = useCallback(async () => {
+    setIsRefreshing(true);
+    setPendingUpdates(null);
+    setCriticalAlert(null);
+    setSelectedFilter('today');
+
+    await refreshData({date_filter:'today'});
+
+    setIsRefreshing(false);
+  }, [refreshData]);
+
+  const handleFilterTomorrow = useCallback(async () => {
+    setIsRefreshing(true);
+    setSelectedFilter('tomorrow');
+   // setPendingUpdates(null);
+   // setCriticalAlert(null);
+
+    await refreshData({date_filter:'tomorrow'});
+
+    setIsRefreshing(false);
+  }, [refreshData]);
+
+  const handleFilterWeek = useCallback(async () => {
+    setIsRefreshing(true);
+    setPendingUpdates(null);
+    setCriticalAlert(null);
+    setSelectedFilter('week');
+
+    await refreshData({date_filter:'week'});
+
+    setIsRefreshing(false);
+  }, [refreshData]);
+
+  const handleFilterAll = useCallback(async () => {
+    setIsRefreshing(true);
+    setPendingUpdates(null);
+    setCriticalAlert(null);
+    setSelectedFilter('all');
+
+    await refreshData({date_filter:'all'});
+
+    setIsRefreshing(false);
+  }, [refreshData]);
+
+  // REFRESH MEJORADO
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setPendingUpdates(null);
+    setCriticalAlert(null);
+    setSelectedFilter('today');
+
+    await refreshData();
+
+    setIsRefreshing(false);
+  }, [refreshData]);
+
+
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-       <StatsCards />
-      {/* Navigation Tabs */}
+
+      {/* ALERTA CRÍTICA FLOTANTE */}
+      <CriticalAlert
+        alert={criticalAlert}
+        onDismiss={() => setCriticalAlert(null)}
+        onRefresh={() => {
+          handleRefresh();
+          setCriticalAlert(null);
+        }}
+      />
+
+      {/* INDICADOR DE WEBSOCKET */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow">
+          {wsStatus === 'connected' ? (
+            <>
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-xs text-green-600">Conectado</span>
+            </>
+          ) : wsStatus === 'connecting' ? (
+            <>
+              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+              <span className="text-xs text-yellow-600">Conectando...</span>
+            </>
+          ) : (
+            <>
+              <div className="w-2 h-2 bg-red-500 rounded-full" />
+              <span className="text-xs text-red-600">Desconectado</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <StatsCards
+        statsData={stats}
+        loading={loading.citas}
+      />
+
       <div className="flex justify-between items-center mb-6 mt-8">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-          <TabButton
-            isActive={activeTab === 'solicitudes'}
-            onClick={() => setActiveTab('solicitudes')}
-            icon={FileText}
-            count={loading.solicitudes ? '...' : total.solicitudes}
-            variant="red"
-          >
-            Solicitudes
-          </TabButton>
-          <TabButton
-            isActive={activeTab === 'citas'}
-            onClick={() => setActiveTab('citas')}
-            icon={Calendar}
-            count={loading.citas ? '...' : total.citas}
-            variant="blue"
-          >
-            Citas del Día
-          </TabButton>
+
+        <div className="flex gap-2">
+          <ActionButton onClick={handleFilterToday} active={selectedFilter === 'today'}>
+            Hoy
+          </ActionButton>
+          <ActionButton onClick={handleFilterTomorrow} active={selectedFilter === 'tomorrow'}>
+            Mañana
+          </ActionButton>
+
+          <ActionButton onClick={handleFilterWeek} active={selectedFilter === 'week'} >
+            Semana
+          </ActionButton>
+          <ActionButton onClick={handleFilterAll} active={selectedFilter === 'all'} >
+            Todas
+          </ActionButton>
         </div>
 
         <div className="flex gap-2">
-          <ActionButton onClick={handleRefresh} icon={RefreshCw}>
-            Actualizar
-          </ActionButton>
-          <ActionButton onClick={handleFilter} icon={Filter}>
-            Filtrar
-          </ActionButton>
-          {activeTab === 'citas' && (
-            <ActionButton onClick={handleVistaSemanal} icon={Calendar}>
-              Vista Semanal
-            </ActionButton>
+          {/* BADGE DE ACTUALIZACIONES PENDIENTES */}
+          {pendingUpdates && !isRefreshing && (
+            <div className={`
+              flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
+              ${pendingUpdates.type === 'urgent'
+                ? 'bg-red-100 text-red-700 animate-pulse'
+                : 'bg-blue-100 text-blue-700'}
+            `}>
+              <Bell className="w-4 h-4" />
+              <span>{pendingUpdates.count} nueva{pendingUpdates.count > 1 ? 's' : ''}</span>
+            </div>
           )}
+
+          <ActionButton onClick={handleFilter} icon={Filter}>
+            Filtros avanzados
+          </ActionButton>
+
+          {/* BOTÓN INTELIGENTE DE ACTUALIZAR */}
+          <SmartRefreshButton
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+            pendingUpdates={pendingUpdates}
+          />
+
           <ActionButton onClick={handleNewCita} icon={Plus} variant="primary">
             Nueva Cita
           </ActionButton>
@@ -107,87 +269,77 @@ export default function Dashboard() {
       {/* Content Area */}
       {loading.current ? (
         <div className="bg-white border border-gray-200 rounded-lg">
-          <LoadingSpinner 
-            text={`Cargando ${activeTab}...`}
+          <LoadingSpinner
+            text={`Cargando citas...`}
           />
         </div>
       ) : error.current ? (
         <div className="bg-white border border-gray-200 rounded-lg">
-          <ErrorMessage 
+          <ErrorMessage
             error={error.current}
             onRetry={refreshData}
-            title={`Error al cargar ${activeTab}`}
+            title={`Error al cargar citas`}
           />
         </div>
       ) : (
         <>
           {/* Data Table */}
-          <DataTable 
-            tipo={activeTab}
-            data={currentData || []}
+          <DataTable
+            headers={[
+              'Hora',
+              'Estado Cita',
+              'Paciente',
+              'Especialidad',
+              'Pago'
+            ]}
+            data={citasData || []}
             onRowClick={handleRowClick}
           />
 
           {/* Footer Stats */}
           <div className="mt-6 flex justify-between items-center text-sm text-gray-500">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>
-                Mostrando <span className="font-semibold text-gray-900">
-                  {(currentData || []).length} de {total.current}
-                </span> {activeTab}.
-              </span>
-              <button className="text-blue-600 hover:text-blue-800 font-medium">
-                Ver todas
-              </button>
-            </div>
-            
+            <TablePagination
+              currentData={currentData} // ✅ Usar currentData del hook
+              total={total.current} // ✅ Usar total.current del hook
+              currentPage={pagination.current.currentPage} // ✅ Usar pagination.current del hook
+              itemsPerPage={pagination.current.itemsPerPage} // ✅ Usar pagination.current del hook
+              itemName={'citas'}
+              onPageChange={currentPageChange} // ✅ Usar currentPageChange del hook
+              onItemsPerPageChange={currentItemsPerPageChange} // ✅ Usar currentItemsPerPageChange del hook
+              loading={loading.current}
+            />
+
             {/* Estadísticas */}
-            {activeTab === 'solicitudes' ? (
-              <div className="flex gap-4">
-                <EstadisticasBadge 
-                  icon={CreditCard}
-                  count={estadisticasSolicitudes.pendientes}
-                  label="Sin Pago"
-                  variant="gray"
-                />
-                <EstadisticasBadge 
-                  icon={CheckCircle}
-                  count={estadisticasSolicitudes.conPago}
-                  label="Con Pago"
-                  variant="green"
-                />
-              </div>
-            ) : (
-              <div className="flex gap-4">
-                <EstadisticasBadge 
-                  icon={CheckCircle}
-                  count={estadisticasCitas.completadas}
-                  label="Completadas"
-                  variant="green"
-                />
-                <EstadisticasBadge 
-                  icon={Loader2}
-                  count={estadisticasCitas.enProceso}
-                  label="En Proceso"
-                  variant="purple"
-                />
-                <EstadisticasBadge 
-                  icon={Clock}
-                  count={estadisticasCitas.pendientes}
-                  label="Pendientes"
-                  variant="orange"
-                />
-                <EstadisticasBadge 
-                  icon={CalendarCheck}
-                  count={estadisticasCitas.confirmadas}
-                  label="Confirmadas"
-                  variant="blue"
-                />
-              </div>
-            )}
+
+            <div className="flex gap-4">
+              <EstadisticasBadge
+                icon={PhoneCall}
+                count={stats.por_confirmar || 0}
+                label="Por confirmar"
+                variant="yellow"
+              />
+              <EstadisticasBadge
+                icon={CreditCard}
+                count={stats.sin_pago || 0}
+                label="Sin pago"
+                variant="gray"
+              />
+
+              <EstadisticasBadge
+                icon={CheckCircle}
+                count={stats.concluidas || 0}
+                label="Concluidas"
+                variant="green"
+              />
+            </div>
+
           </div>
+
+
         </>
       )}
-    </div>
-  );
+
+
+
+    </div>);
 }

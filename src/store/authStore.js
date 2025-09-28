@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../services/api';
 
+import { plainClient, refreshClient, markSessionExpired } from '../services/api';
+
 
 // Función para obtener info del dispositivo
 const getDeviceInfo = () => {
@@ -67,8 +69,8 @@ export const useAuthStore = create(
       isLoading: false, // ✅ Por defecto NO loading
 
       // Acciones básicas
-      setUser: (user) => set({ 
-        user, 
+      setUser: (user) => set({
+        user,
         isAuthenticated: !!user,
         isLoading: false // ✅ Loading false cuando tenemos datos
       }),
@@ -86,8 +88,8 @@ export const useAuthStore = create(
 
           // ✅ ÉXITO: Actualizar store con datos persistentes
           const user = response.data.user;
-          set({ 
-            user, 
+          set({
+            user,
             isAuthenticated: true
           });
 
@@ -95,8 +97,8 @@ export const useAuthStore = create(
 
         } catch (error) {
           // ✅ ERROR: NO TOCAR EL STORE
-          return { 
-            success: false, 
+          return {
+            success: false,
             error: error.response?.data,
             status: error.response?.status
           };
@@ -104,40 +106,102 @@ export const useAuthStore = create(
       },
 
       // ✅ Verificar autenticación existente
+      // checkAuth: async () => {
+      //   console.log('🔍 === INICIANDO checkAuth ===');
+      //   console.log('🍪 Cookies actuales:', document.cookie);
+
+      //   // ✅ Establecer loading solo cuando empezamos a verificar
+      //   set({ isLoading: true });
+
+      //   try {
+      //     console.log('📡 Haciendo GET /auth/me...');
+      //     const response = await api.get('/auth/me');
+      //     console.log('✅ Respuesta exitosa status:', response.status);
+      //     console.log('📡 Respuesta completa del servidor:', response.data);
+
+      //     const user = response.data;
+      //     console.log('👤 Usuario extraído:', user);
+
+      //     if (!user || !user.usuario.id) {
+      //       console.log('❌ Datos de usuario inválidos - limpiando estado');
+      //       set({ user: null, isAuthenticated: false, isLoading: false });
+      //       return false;
+      //     }
+
+      //     console.log('✅ Usuario válido - actualizando store');
+      //     set({ user, isAuthenticated: true, isLoading: false });
+      //     return true;
+
+      //   } catch (error) {
+      //     console.log('💥 === ERROR EN checkAuth ===');
+      //     console.log('Status:', error.response?.status);
+      //     console.log('Data:', error.response?.data);
+      //     console.log('Message:', error.message);
+      //     console.log('Config URL:', error.config?.url);
+      //     console.log('🧹 Limpiando estado...');
+
+      //     set({ user: null, isAuthenticated: false, isLoading: false });
+      //     return false;
+      //   }
+      // },
       checkAuth: async () => {
         console.log('🔍 === INICIANDO checkAuth ===');
-        console.log('🍪 Cookies actuales:', document.cookie);
-        
-        // ✅ Establecer loading solo cuando empezamos a verificar
+        // marcar loading sólo mientras verificamos
         set({ isLoading: true });
-        
+
         try {
-          console.log('📡 Haciendo GET /auth/me...');
-          const response = await api.get('/auth/me');
-          console.log('✅ Respuesta exitosa status:', response.status);
-          console.log('📡 Respuesta completa del servidor:', response.data);
-          
+          console.log('📡 GET /auth/me usando plainClient (sin interceptors)...');
+          const response = await plainClient.get('/auth/me');
+          console.log('✅ /auth/me OK status:', response.status);
           const user = response.data;
-          console.log('👤 Usuario extraído:', user);
-          
-          if (!user || !user.usuario.id) {
-            console.log('❌ Datos de usuario inválidos - limpiando estado');
+
+          if (!user || !user.usuario?.id) {
+            console.log('❌ Usuario inválido en /auth/me -> limpiar store');
             set({ user: null, isAuthenticated: false, isLoading: false });
             return false;
           }
-          
+
           console.log('✅ Usuario válido - actualizando store');
           set({ user, isAuthenticated: true, isLoading: false });
           return true;
-          
+
         } catch (error) {
-          console.log('💥 === ERROR EN checkAuth ===');
-          console.log('Status:', error.response?.status);
-          console.log('Data:', error.response?.data);
-          console.log('Message:', error.message);
-          console.log('Config URL:', error.config?.url);
-          console.log('🧹 Limpiando estado...');
-          
+          const status = error.response?.status;
+          console.log('💥 ERROR en /auth/me:', status, error.message);
+
+          // Si 401: intentar refresh explícito UNA vez con refreshClient
+          if (status === 401) {
+            try {
+              console.log('🔄 /auth/me 401 -> intentando POST /auth/refresh (plain refresh client)...');
+              // opcional: si quieres timeout extra, puedes envolver en Promise.race
+              await refreshClient.post('/auth/refresh');
+
+              // si refresh fue OK, reintentar /auth/me
+              console.log('📡 Refresh OK - reintentando GET /auth/me...');
+              const resp2 = await plainClient.get('/auth/me');
+
+              const user2 = resp2.data;
+              if (!user2 || !user2.usuario?.id) {
+                console.log('❌ Después de refresh, usuario inválido -> limpiar store');
+                set({ user: null, isAuthenticated: false, isLoading: false });
+                return false;
+              }
+
+              console.log('✅ Restaurado: actualizando store con user después de refresh');
+              set({ user: user2, isAuthenticated: true, isLoading: false });
+              return true;
+
+            } catch (refreshErr) {
+              // refresh falló -> limpiar y marcar expiración para evitar reintentos inmediatos desde /login
+              console.warn('💥 Refresh falló (o timeout). Forzando logout local.');
+              set({ user: null, isAuthenticated: false, isLoading: false });
+              try { markSessionExpired(); } catch (e) { console.warn('No se pudo marcar session-expired', e); }
+              return false;
+            }
+          }
+
+          // otros errores (network, 5xx, etc)
+          console.log('⚠️ Error distinto a 401 en /auth/me -> limpiar estado (no intentar refresh here).');
           set({ user: null, isAuthenticated: false, isLoading: false });
           return false;
         }
@@ -151,8 +215,8 @@ export const useAuthStore = create(
           console.log('Error en logout:', error);
         } finally {
           // ✅ Limpiar datos persistentes
-          set({ 
-            user: null, 
+          set({
+            user: null,
             isAuthenticated: false,
             isLoading: false
           });
@@ -161,8 +225,8 @@ export const useAuthStore = create(
 
       // ✅ Logout forzado (para token expirado)
       forceLogout: () => {
-        set({ 
-          user: null, 
+        set({
+          user: null,
           isAuthenticated: false,
           isLoading: false
         });
@@ -171,48 +235,48 @@ export const useAuthStore = create(
       // ✅ NUEVA FUNCIÓN: Cambiar consultorio
       cambiarConsultorio: async (consultorioId) => {
         console.log('🏥 Cambiando consultorio a:', consultorioId);
-        
+
         // ✅ Mostrar loading durante el cambio
         set({ isLoading: true });
-        
+
         try {
           const response = await api.post('/auth/cambiar-consultorio', {
             consultorio_id: parseInt(consultorioId) // Asegurar que sea número
           });
 
           console.log('✅ Consultorio cambiado exitosamente:', response.data);
-          
+
           // Actualizar el store con la nueva data del usuario
           const updatedData = response.data;
-          
+
           if (updatedData.success && updatedData.user) {
-            set({ 
+            set({
               user: updatedData.user,
               isAuthenticated: true,
               isLoading: false // ✅ Quitar loading
             });
-            
+
             console.log('🔄 Store actualizado con nuevo consultorio');
-            return { 
-              success: true, 
+            return {
+              success: true,
               message: updatedData.message,
-              user: updatedData.user 
+              user: updatedData.user
             };
           } else {
             console.log('❌ Respuesta sin datos de usuario válidos');
             set({ isLoading: false }); // ✅ Quitar loading en error
-            return { 
-              success: false, 
-              error: 'Respuesta inválida del servidor' 
+            return {
+              success: false,
+              error: 'Respuesta inválida del servidor'
             };
           }
 
         } catch (error) {
           console.log('❌ Error cambiando consultorio:', error.response?.data);
           set({ isLoading: false }); // ✅ Quitar loading en error
-          
-          return { 
-            success: false, 
+
+          return {
+            success: false,
             error: error.response?.data?.detail || 'Error cambiando consultorio',
             status: error.response?.status
           };
@@ -221,27 +285,27 @@ export const useAuthStore = create(
 
       // Funciones de utilidad para acceder a datos específicos
       getUserInfo: () => get().user?.usuario,
-      
+
       getGlobalRole: () => get().user?.rol_global,
-      
+
       getPermissions: () => get().user?.permisos_lista || [],
-      
+
       hasPermission: (moduleName, action = 'READ') => {
         const state = get();
         if (!state.user?.permisos_lista) return false;
-        
+
         const permission = `${moduleName}:${action}`;
         return state.user.permisos_lista.includes(permission) || state.user.es_superadmin;
       },
-      
+
       isSuperAdmin: () => get().user?.es_superadmin || false,
-      
+
       getCurrentConsultorio: () => get().user?.consultorio_contexto_actual,
-      
+
       getUserConsultorios: () => get().user?.consultorios_usuario || [],
-      
+
       getAllConsultorios: () => get().user?.todos_consultorios || [],
-      
+
       getMenuModules: () => get().user?.menu_modulos || [],
 
       // Reset completo
@@ -253,9 +317,9 @@ export const useAuthStore = create(
     }),
     {
       name: 'auth-store',
-      partialize: (state) => ({ 
-        user: state.user, 
-        isAuthenticated: state.isAuthenticated 
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated
       })
     }
   )

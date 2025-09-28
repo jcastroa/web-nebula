@@ -4,45 +4,46 @@ import { SolicitudRow } from './SolicitudRow';
 import { CitaRow } from './CitaRow';
 import { FileX, CalendarX } from 'lucide-react';
 
-const SOLICITUDES_HEADERS = [
-  'Solicitud',
-  'Paciente', 
-  'Especialidad',
-  'Fecha Solicitada',
-  'Estado/Pago'
-];
+// const SOLICITUDES_HEADERS = [
+//   'Hora',
+//   'Paciente', 
+//   'Especialidad',
+//   'Estado Cita',
+//   'Pago'
+// ];
 
-const CITAS_HEADERS = [
-  'Hora',
-  'Paciente',
-  'Especialidad', 
-  'Tipo Consulta',
-  'Estado'
-];
+
 
 export function DataTable({ 
-  tipo, 
+  headers = [],
   data = [], // Valor por defecto
   onRowClick 
 }) {
-  const headers = tipo === 'solicitudes' ? SOLICITUDES_HEADERS : CITAS_HEADERS;
   
   // Mensajes específicos para cada tipo
   const getEmptyMessage = () => {
-    if (tipo === 'solicitudes') {
-      return {
-        icon: FileX,
-        title: 'No hay solicitudes pendientes',
-        subtitle: 'Las nuevas solicitudes aparecerán aquí'
-      };
-    } else {
+   
       return {
         icon: CalendarX,
         title: 'No hay citas programadas',
         subtitle: 'Las citas del día aparecerán aquí'
       };
-    }
+    
   };
+
+  const isToday = (dateString) => {
+    try {
+        const [day, month, year] = dateString.split('/').map(Number);
+        const inputDate = new Date(year, month - 1, day);
+        const today = new Date();
+        
+        return inputDate.getFullYear() === today.getFullYear() &&
+               inputDate.getMonth() === today.getMonth() &&
+               inputDate.getDate() === today.getDate();
+    } catch {
+        return false;
+    }
+}
   
   // Verificar que data es un array y tiene elementos
   if (!Array.isArray(data) || data.length === 0) {
@@ -105,27 +106,20 @@ export function DataTable({
           {data.map((item, index) => {
             // Verificar que el item existe antes de renderizar
             if (!item) {
-              console.warn(`Item ${index} is null/undefined in ${tipo}`);
+              console.warn(`Item ${index} is null/undefined`);
               return null;
             }
 
-            if (tipo === 'solicitudes') {
-              return (
-                <SolicitudRow 
-                  key={item.id || index}
-                  solicitud={item}
-                  onClick={onRowClick}
-                />
-              );
-            } else {
+          
               return (
                 <CitaRow 
                   key={item.codigo || index}
                   cita={item}
+                  isToday = {isToday(item.fecha)}
                   onClick={onRowClick}
                 />
               );
-            }
+            
           })}
         </tbody>
       </table>
