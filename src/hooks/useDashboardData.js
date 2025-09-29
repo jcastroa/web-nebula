@@ -202,24 +202,7 @@ export function useDashboardData() {
     setSelectedFilter(filterType);
     setCitasPagination(prev => ({ ...prev, currentPage: 1 })); // Reset pagination
 
-     // Limpiar filtros avanzados
-    const clearedAdvancedFilters = {
-      nombre_completo: '',
-      telefono: '',
-      numero_documento: '',
-      fecha_cita: '',
-      estado_cita: '',
-      estado_pago: ''
-    };
-
-    setAdvancedFilters(clearedAdvancedFilters);
-    latestAdvancedFiltersRef.current = clearedAdvancedFilters;
     
-    // Volver a modo filtros rápidos con filtro "today"
-    setFilterMode('quick');
-    setSelectedFilter('today');
-    latestFilterModeRef.current = 'quick';
-    latestSelectedFilterRef.current = 'today';
 
 
     await loadCitas({ date_filter: filterType }, 1, null);

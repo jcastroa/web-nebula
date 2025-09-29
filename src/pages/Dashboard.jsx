@@ -26,6 +26,7 @@ import useWebSocket from '../hooks/useWebSocket';
 import { SmartRefreshButton } from '../components/dashboard/SmartRefreshButton'; // NUEVO
 import AdvancedFiltersModal from '../components/dashboard/AdvancedFiltersModal';
 import AppliedFiltersBar from '../components/dashboard/AppliedFiltersBar';
+import CitaDetailsModal from '../components/dashboard/CitaDetailsModal'; // NUEVO: Importar el modal
 
 
 export default function Dashboard() {
@@ -58,6 +59,11 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // NUEVO: Estados para el modal de detalles de cita
+  const [selectedCita, setSelectedCita] = useState(null);
+  const [showCitaModal, setShowCitaModal] = useState(false);
+  const [citaModalLoading, setCitaModalLoading] = useState(false);
 
   const codigoNegocio = 'salud_vida';
   // WebSocket hook
@@ -115,9 +121,85 @@ export default function Dashboard() {
 
   console.log('ESTADO SOCKET:', wsStatus);
 
-  const handleRowClick = (item) => {
-    console.log('Clicked item:', item);
-    // Aquí puedes manejar la navegación o abrir modales
+  // ✅ NUEVA FUNCIÓN: Manejar click en fila
+  const handleRowClick = useCallback((cita) => {
+    console.log('🎯 Clicked cita:', cita);
+
+    if (!cita || !cita.id) {
+      console.warn('❌ Cita inválida:', cita);
+      return;
+    }
+
+    // Opción 1: Usar datos existentes (recomendado para velocidad)
+    // Ya tienes todos los datos necesarios en la estructura que me mostraste
+    setSelectedCita(cita);
+    setShowCitaModal(true);
+
+    // Opción 2: Si necesitas datos adicionales, puedes hacer una llamada al endpoint
+    // fetchCitaDetails(cita.id);
+  }, []);
+
+  // ✅ FUNCIÓN OPCIONAL: Obtener detalles adicionales de la cita
+  const fetchCitaDetails = async (citaId) => {
+    setCitaModalLoading(true);
+    // try {
+    //   console.log('📡 Obteniendo detalles de cita:', citaId);
+
+    //   // Llamada al endpoint para obtener detalles completos
+    //   const response = await api.get(`/negocios/${codigoNegocio}/citas/${citaId}/detalles`);
+
+    //   console.log('✅ Detalles obtenidos:', response.data);
+    //   setSelectedCita(response.data);
+    //   setShowCitaModal(true);
+
+    // } catch (error) {
+    //   console.error('❌ Error obteniendo detalles de cita:', error);
+    //   // Opcional: Mostrar notificación de error
+    // } finally {
+    //   setCitaModalLoading(false);
+    // }
+  };
+
+  // ✅ FUNCIÓN: Actualizar cita desde el modal
+  const handleUpdateCita = async (updateData) => {
+    console.log('📝 Actualizando cita:', updateData);
+
+    // try {
+    //   const response = await api.post(`/negocios/${codigoNegocio}/citas/${updateData.id}/actualizar`, {
+    //     accion: updateData.accion,
+    //     datos_paciente: updateData.datos_paciente,
+    //     datos_pago: updateData.datos_pago,
+    //     devolucion: updateData.devolucion
+    //   });
+
+    //   console.log('✅ Cita actualizada:', response.data);
+
+    //   // Cerrar modal
+    //   setShowCitaModal(false);
+    //   setSelectedCita(null);
+
+    //   // Refrescar datos para mostrar cambios
+    //   await refreshData();
+
+    //   // Opcional: Mostrar notificación de éxito
+    //   // toast.success('Cita actualizada exitosamente');
+
+    //   return response.data;
+
+    // } catch (error) {
+    //   console.error('❌ Error actualizando cita:', error);
+
+    //   // Opcional: Mostrar notificación de error
+    //   // toast.error(error.response?.data?.detail || 'Error actualizando cita');
+
+    //   throw error;
+    // }
+  };
+
+  // ✅ FUNCIÓN: Cerrar modal
+  const handleCloseCitaModal = () => {
+    setShowCitaModal(false);
+    setSelectedCita(null);
   };
 
   const handleNewCita = () => {
@@ -135,12 +217,12 @@ export default function Dashboard() {
     console.log('🎯 [DASHBOARD] handleApplyAdvancedFilters recibió:', filters);
     console.log('🎯 [DASHBOARD] Tipo de datos recibidos:', typeof filters);
     console.log('🎯 [DASHBOARD] Claves del objeto:', Object.keys(filters));
-    
+
     setShowAdvancedFilters(false);
-    
+
     // ✅ CORREGIDO: Pasar los filtros directamente
     await applyAdvancedFilters(filters);
-    
+
     console.log('🎯 [DASHBOARD] Después de applyAdvancedFilters - advancedFilters actuales:', advancedFilters);
   };
 
@@ -199,7 +281,7 @@ export default function Dashboard() {
 
   // ✅ OPTIMIZADO: Refresh mantiene el filtro actual
   const handleRefresh = useCallback(async () => {
-   setIsRefreshing(true);
+    setIsRefreshing(true);
     setPendingUpdates(null);
     setCriticalAlert(null);
 
@@ -256,7 +338,7 @@ export default function Dashboard() {
         loading={loading.citas}
       />
 
-     
+
 
 
       <div className="flex justify-between items-center mb-6 mt-8">
@@ -304,9 +386,9 @@ export default function Dashboard() {
           )}
 
           {!hasAdvancedFilters && (
-          <ActionButton onClick={handleFilter} icon={Filter}>
-            Filtros avanzados
-          </ActionButton>
+            <ActionButton onClick={handleFilter} icon={Filter}>
+              Filtros avanzados
+            </ActionButton>
           )}
 
           {/* BOTÓN INTELIGENTE DE ACTUALIZAR */}
@@ -321,9 +403,9 @@ export default function Dashboard() {
           </ActionButton>
         </div>
 
-       
+
       </div>
-  {/* ✅ NUEVO: Barra de filtros aplicados */}
+      {/* ✅ NUEVO: Barra de filtros aplicados */}
       {hasAdvancedFilters && (
         <AppliedFiltersBar
           filters={advancedFilters}
@@ -333,7 +415,7 @@ export default function Dashboard() {
           loading={loading.current}
         />
       )}
-      
+
 
       {/* Content Area */}
       {loading.current ? (
@@ -403,6 +485,15 @@ export default function Dashboard() {
             </div>
 
           </div>
+
+           {/* ✅ NUEVO: MODAL DE DETALLES DE CITA */}
+          <CitaDetailsModal
+            isOpen={showCitaModal}
+            onClose={handleCloseCitaModal}
+            citaData={selectedCita}
+            onUpdateCita={handleUpdateCita}
+            loading={citaModalLoading}
+          />
 
           {/* ✅ MODAL DE FILTROS AVANZADOS */}
           <AdvancedFiltersModal
