@@ -24,21 +24,32 @@ import AppointmentService from '../services/appointmentService';
 import { CriticalAlert } from '../components/dashboard/CriticalAlert'; // NUEVO
 import useWebSocket from '../hooks/useWebSocket';
 import { SmartRefreshButton } from '../components/dashboard/SmartRefreshButton'; // NUEVO
+import AdvancedFiltersModal from '../components/dashboard/AdvancedFiltersModal';
+import AppliedFiltersBar from '../components/dashboard/AppliedFiltersBar';
 
 
 export default function Dashboard() {
   const {
+    // ✅ NUEVO: selectedFilter ahora viene del hook
+    selectedFilter,
+    filterMode,
+    hasAdvancedFilters,
     citasData,
     stats,
-    currentData, // ✅ Esta variable ya está en tu hook
+    currentData,
     loading,
     error,
     total,
-    pagination, // ✅ Esta variable ya está en tu hook
-    loadCitas,
+    pagination,
     refreshData,
-    currentPageChange, // ✅ Estas funciones ya están en tu hook
-    currentItemsPerPageChange // ✅ Estas funciones ya están en tu hook
+    currentPageChange,
+    currentItemsPerPageChange,
+    // ✅ NUEVA: función unificada para cambiar filtros
+    handleFilterChange,
+    advancedFilters,
+    applyAdvancedFilters,
+    removeAdvancedFilter,
+    clearAdvancedFilters
   } = useDashboardData();
 
   // NUEVOS ESTADOS para alertas
@@ -46,11 +57,13 @@ export default function Dashboard() {
   const [pendingUpdates, setPendingUpdates] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
   const codigoNegocio = 'salud_vida';
   // WebSocket hook
   const { wsStatus, notifications, sendMessage } = useWebSocket(codigoNegocio);
 
-  const [selectedFilter, setSelectedFilter] = useState('today');
+  //const [selectedFilter, setSelectedFilter] = useState('today');
 
 
 
@@ -113,68 +126,94 @@ export default function Dashboard() {
   };
 
   const handleFilter = () => {
-    console.log('Filter clicked');
-    // Manejar filtros
+    console.log('Filter clicked - Abriendo modal de filtros avanzados');
+    setShowAdvancedFilters(true);
+  };
+
+  // ✅ NUEVAS: Funciones para manejar filtros avanzados
+  const handleApplyAdvancedFilters = async (filters) => {
+    console.log('🎯 [DASHBOARD] handleApplyAdvancedFilters recibió:', filters);
+    console.log('🎯 [DASHBOARD] Tipo de datos recibidos:', typeof filters);
+    console.log('🎯 [DASHBOARD] Claves del objeto:', Object.keys(filters));
+    
+    setShowAdvancedFilters(false);
+    
+    // ✅ CORREGIDO: Pasar los filtros directamente
+    await applyAdvancedFilters(filters);
+    
+    console.log('🎯 [DASHBOARD] Después de applyAdvancedFilters - advancedFilters actuales:', advancedFilters);
+  };
+
+  const handleClearAdvancedFilters = async () => {
+    console.log('🧹 Limpiando filtros avanzados');
+    await clearAdvancedFilters();
+  };
+
+  const handleEditAdvancedFilters = () => {
+    console.log('✏️ Editando filtros avanzados');
+    setShowAdvancedFilters(true);
   };
 
 
 
 
+
+  // ✅ OPTIMIZADO: Handlers de filtros simplificados
   const handleFilterToday = useCallback(async () => {
     setIsRefreshing(true);
     setPendingUpdates(null);
     setCriticalAlert(null);
-    setSelectedFilter('today');
 
-    await refreshData({date_filter:'today'});
+    await handleFilterChange('today');
 
     setIsRefreshing(false);
-  }, [refreshData]);
+  }, [handleFilterChange]);
 
   const handleFilterTomorrow = useCallback(async () => {
     setIsRefreshing(true);
-    setSelectedFilter('tomorrow');
-   // setPendingUpdates(null);
-   // setCriticalAlert(null);
 
-    await refreshData({date_filter:'tomorrow'});
+    await handleFilterChange('tomorrow');
 
     setIsRefreshing(false);
-  }, [refreshData]);
+  }, [handleFilterChange]);
 
   const handleFilterWeek = useCallback(async () => {
     setIsRefreshing(true);
     setPendingUpdates(null);
     setCriticalAlert(null);
-    setSelectedFilter('week');
 
-    await refreshData({date_filter:'week'});
+    await handleFilterChange('week');
 
     setIsRefreshing(false);
-  }, [refreshData]);
+  }, [handleFilterChange]);
 
   const handleFilterAll = useCallback(async () => {
     setIsRefreshing(true);
     setPendingUpdates(null);
     setCriticalAlert(null);
-    setSelectedFilter('all');
 
-    await refreshData({date_filter:'all'});
+    await handleFilterChange('all');
 
     setIsRefreshing(false);
-  }, [refreshData]);
+  }, [handleFilterChange]);
 
-  // REFRESH MEJORADO
+  // ✅ OPTIMIZADO: Refresh mantiene el filtro actual
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
+   setIsRefreshing(true);
     setPendingUpdates(null);
     setCriticalAlert(null);
-    setSelectedFilter('today');
 
-    await refreshData();
+    // ✅ MEJORADO: Si hay filtros avanzados, limpiarlos primero
+    if (hasAdvancedFilters) {
+      console.log('🧹 Refresh: Limpiando filtros avanzados primero');
+      await clearAdvancedFilters();
+    } else {
+      // Si no hay filtros avanzados, solo actualizar con filtro "today"
+      await handleFilterChange('today');
+    }
 
     setIsRefreshing(false);
-  }, [refreshData]);
+  }, [hasAdvancedFilters, clearAdvancedFilters, handleFilterChange]);
 
 
   return (
@@ -217,23 +256,38 @@ export default function Dashboard() {
         loading={loading.citas}
       />
 
+     
+
+
       <div className="flex justify-between items-center mb-6 mt-8">
 
-        <div className="flex gap-2">
-          <ActionButton onClick={handleFilterToday} active={selectedFilter === 'today'}>
-            Hoy
-          </ActionButton>
-          <ActionButton onClick={handleFilterTomorrow} active={selectedFilter === 'tomorrow'}>
-            Mañana
-          </ActionButton>
+        {!hasAdvancedFilters && (
+          <div className="flex gap-2">
+            <ActionButton onClick={handleFilterToday} active={selectedFilter === 'today'}>
+              Hoy
+            </ActionButton>
+            <ActionButton onClick={handleFilterTomorrow} active={selectedFilter === 'tomorrow'}>
+              Mañana
+            </ActionButton>
 
-          <ActionButton onClick={handleFilterWeek} active={selectedFilter === 'week'} >
-            Semana
-          </ActionButton>
-          <ActionButton onClick={handleFilterAll} active={selectedFilter === 'all'} >
-            Todas
-          </ActionButton>
-        </div>
+            <ActionButton onClick={handleFilterWeek} active={selectedFilter === 'week'} >
+              Semana
+            </ActionButton>
+            <ActionButton onClick={handleFilterAll} active={selectedFilter === 'all'} >
+              Todas
+            </ActionButton>
+          </div>
+        )}
+
+        {/* ✅ NUEVO: Mostrar texto informativo cuando hay filtros avanzados */}
+        {hasAdvancedFilters && (
+          <div className="flex items-center gap-2 text-gray-600">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Mostrando resultados filtrados
+            </span>
+          </div>
+        )}
 
         <div className="flex gap-2">
           {/* BADGE DE ACTUALIZACIONES PENDIENTES */}
@@ -249,9 +303,11 @@ export default function Dashboard() {
             </div>
           )}
 
+          {!hasAdvancedFilters && (
           <ActionButton onClick={handleFilter} icon={Filter}>
             Filtros avanzados
           </ActionButton>
+          )}
 
           {/* BOTÓN INTELIGENTE DE ACTUALIZAR */}
           <SmartRefreshButton
@@ -264,7 +320,20 @@ export default function Dashboard() {
             Nueva Cita
           </ActionButton>
         </div>
+
+       
       </div>
+  {/* ✅ NUEVO: Barra de filtros aplicados */}
+      {hasAdvancedFilters && (
+        <AppliedFiltersBar
+          filters={advancedFilters}
+          onRemoveFilter={removeAdvancedFilter}
+          onClearAll={handleClearAdvancedFilters}
+          onEditFilters={handleEditAdvancedFilters}
+          loading={loading.current}
+        />
+      )}
+      
 
       {/* Content Area */}
       {loading.current ? (
@@ -334,6 +403,16 @@ export default function Dashboard() {
             </div>
 
           </div>
+
+          {/* ✅ MODAL DE FILTROS AVANZADOS */}
+          <AdvancedFiltersModal
+            isOpen={showAdvancedFilters}          // ← Se muestra cuando es true
+            onClose={() => setShowAdvancedFilters(false)}
+            onApplyFilters={handleApplyAdvancedFilters}
+            onClearFilters={handleClearAdvancedFilters}
+            initialFilters={advancedFilters}
+            loading={loading.current}
+          />
 
 
         </>
