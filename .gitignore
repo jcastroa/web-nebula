@@ -9,3 +9,4 @@ docker-compose-local.yml
 /www/writable
 /www/tests
 .vscode/
+/node_modules
