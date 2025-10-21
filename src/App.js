@@ -10,7 +10,7 @@
 // // Rutas protegidas
 // const PrivateRoute = ({ children }) => {
 //   const { isAuthenticated, isLoading } = useAuth();
-  
+
 //   // ✅ Mostrar loading mientras verifica auth
 //   if (isLoading) {
 //     return (
@@ -22,13 +22,13 @@
 //       </div>
 //     );
 //   }
-  
+
 //   return isAuthenticated ? children : <Navigate to="/login" replace />;
 // };
 
 // const PublicRoute = ({ children }) => {
 //   const { isAuthenticated, isLoading } = useAuth();
-  
+
 //   // ✅ Mostrar loading mientras verifica auth
 //   if (isLoading) {
 //     return (
@@ -40,7 +40,7 @@
 //       </div>
 //     );
 //   }
-  
+
 //   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 // };
 
@@ -49,7 +49,7 @@
 //     <Router>
 //       <Routes>
 //         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
+
 //         <Route 
 //           path="/login" 
 //           element={
@@ -58,7 +58,7 @@
 //             </PublicRoute>
 //           } 
 //         />
-        
+
 //         <Route 
 //           path="/dashboard" 
 //           element={
@@ -67,7 +67,7 @@
 //             </PrivateRoute>
 //           } 
 //         />
-        
+
 //         <Route path="*" element={<Navigate to="/dashboard" replace />} />
 //       </Routes>
 //     </Router>
@@ -87,43 +87,44 @@ import TemplateLayout from './components/layout/TemplateLayout';
 // Páginas
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
 
 // Wrapper que aplica el Layout automáticamente a las rutas protegidas
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
   const { user } = useAuth();
-  
+
   // Función para obtener configuración de página basada en módulos del usuario
   const getPageConfig = () => {
     const path = location.pathname;
-    
+
     // Dashboard siempre disponible
     if (path === '/dashboard' || path === '/') {
-      return { 
-        activeMenu: 'dashboard', 
-        currentPage: 'Dashboard' 
+      return {
+        activeMenu: 'dashboard',
+        currentPage: 'Dashboard'
       };
     }
-    
+
     // Buscar en los módulos del usuario
     if (user?.menu_modulos) {
       // Buscar módulo que coincida con la ruta actual
-      const currentModule = user.menu_modulos.find(modulo => 
+      const currentModule = user.menu_modulos.find(modulo =>
         modulo.ruta === path || path.startsWith(modulo.ruta + '/')
       );
-      
+
       if (currentModule) {
         return {
           activeMenu: currentModule.nombre.toLowerCase().replace(/\s+/g, '-'),
           currentPage: currentModule.nombre
         };
       }
-      
+
       // Si no encuentra coincidencia exacta, buscar por prefijo de ruta
-      const moduleByPrefix = user.menu_modulos.find(modulo => 
+      const moduleByPrefix = user.menu_modulos.find(modulo =>
         path.startsWith(modulo.ruta.split('/')[1] ? '/' + modulo.ruta.split('/')[1] : modulo.ruta)
       );
-      
+
       if (moduleByPrefix) {
         return {
           activeMenu: moduleByPrefix.nombre.toLowerCase().replace(/\s+/g, '-'),
@@ -131,16 +132,16 @@ const LayoutWrapper = ({ children }) => {
         };
       }
     }
-    
+
     // Fallback para rutas no encontradas
-    return { 
-      activeMenu: 'dashboard', 
-      currentPage: 'Página' 
+    return {
+      activeMenu: 'dashboard',
+      currentPage: 'Página'
     };
   };
-  
+
   const { activeMenu, currentPage } = getPageConfig();
-  
+
   return (
     <TemplateLayout activeMenu={activeMenu} currentPage={currentPage}>
       {children}
@@ -151,7 +152,7 @@ const LayoutWrapper = ({ children }) => {
 // Rutas protegidas CON Layout automático
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   // Mostrar loading mientras verifica auth
   if (isLoading) {
     return (
@@ -163,7 +164,7 @@ const PrivateRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   return isAuthenticated ? (
     <LayoutWrapper>
       {children}
@@ -174,7 +175,7 @@ const PrivateRoute = ({ children }) => {
 // Rutas públicas SIN Layout
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   // Mostrar loading mientras verifica auth
   if (isLoading) {
     return (
@@ -186,7 +187,7 @@ const PublicRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 };
 
@@ -212,91 +213,100 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
+
         {/* Ruta pública - SIN Layout */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <PublicRoute>
               <Login />
             </PublicRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta principal - CON Layout automático */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <PrivateRoute>
               <Dashboard />
             </PrivateRoute>
-          } 
+          }
         />
-        
+
         {/* Rutas dinámicas para los módulos - Páginas temporales */}
-        <Route 
-          path="/citas" 
+        <Route
+          path="/citas"
           element={
             <PrivateRoute>
               <ComingSoon moduleName="Citas" />
             </PrivateRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/agenda" 
+
+        <Route
+          path="/agenda"
           element={
             <PrivateRoute>
               <ComingSoon moduleName="Agenda" />
             </PrivateRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/pacientes" 
+
+        <Route
+          path="/pacientes"
           element={
             <PrivateRoute>
               <ComingSoon moduleName="Pacientes" />
             </PrivateRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/historia-clinica" 
+
+        <Route
+          path="/historia-clinica"
           element={
             <PrivateRoute>
               <ComingSoon moduleName="Historia Clínica" />
             </PrivateRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/pagos" 
+
+        <Route
+          path="/pagos"
           element={
             <PrivateRoute>
               <ComingSoon moduleName="Pagos" />
             </PrivateRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/reportes" 
+
+        <Route
+          path="/reportes"
           element={
             <PrivateRoute>
               <ComingSoon moduleName="Reportes" />
             </PrivateRoute>
-          } 
+          }
         />
-        
-        <Route 
-          path="/configuracion" 
+
+        <Route
+          path="/configuracion/vincular"
           element={
             <PrivateRoute>
-              <ComingSoon moduleName="Configuración" />
+              <WhatsAppVinculacion />
             </PrivateRoute>
-          } 
+          }
         />
-        
+
+        <Route
+          path="/configuracion/whatsapp-callback"
+          element={
+            <PrivateRoute>
+              <WhatsAppVinculacion />
+            </PrivateRoute>
+          }
+        />
+
         {/* Catch-all para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

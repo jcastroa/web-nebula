@@ -1,4 +1,4 @@
-// hooks/useWebSocket.js
+// src/hooks/useWebSocket.js
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 
@@ -8,16 +8,27 @@ const useWebSocket = (codigoNegocio) => {
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
 
+  // ✅ Obtener base URL desde variable de entorno
+  const getWebSocketUrl = () => {
+    // Obtener URL base del API
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+    
+    // Determinar protocolo WebSocket (ws o wss)
+    const protocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+    
+    // Extraer host del API URL (sin /api/v1)
+    const urlObj = new URL(apiUrl);
+    const host = urlObj.host; // incluye puerto si existe
+    
+    return `${protocol}://${host}/api/v1`;
+  };
+
   // Función para obtener token de WebSocket
   const getWebSocketToken = async () => {
     try {
-
       const response = await api.get(`/negocios/${codigoNegocio}/ws-token`);
-
       const data = response.data;
-
       return data.ws_token;
-      
     } catch (error) {
       console.error('Error getting WebSocket token:', error);
       return null;
@@ -31,7 +42,7 @@ const useWebSocket = (codigoNegocio) => {
       
       // 1. Obtener token
       const wsToken = await getWebSocketToken();
-       console.log('WebSocket TOKENNNNNNNNNNN', wsToken);
+      console.log('WebSocket token obtenido');
       
       if (!wsToken) {
         console.error('No se pudo obtener token de WebSocket');
@@ -39,9 +50,10 @@ const useWebSocket = (codigoNegocio) => {
         return;
       }
 
-      // 2. Conectar WebSocket con el token
-      const wsUrl =  `ws://localhost:8000/api/v1/negocios/${codigoNegocio}/smart-ws?token=${wsToken}`;
-      console.log('WebSocket URL', wsUrl);
+      // ✅ 2. Construir URL dinámico
+      const baseWsUrl = getWebSocketUrl();
+      const wsUrl = `${baseWsUrl}/negocios/${codigoNegocio}/smart-ws?token=${wsToken}`;
+      console.log('🔌 Conectando WebSocket a:', wsUrl);
 
       const ws = new WebSocket(wsUrl);
       
@@ -89,13 +101,11 @@ const useWebSocket = (codigoNegocio) => {
     
     switch(message.type) {
       case 'negocio_update':
-        // Agregar notificación a la lista
         setNotifications(prev => [{
           ...message.data,
           receivedAt: new Date().toISOString()
         }, ...prev]);
         
-        // Disparar evento personalizado para que otros componentes sepan
         window.dispatchEvent(new CustomEvent('ws-appointment-update', { 
           detail: message.data
         }));
