@@ -10,3 +10,4 @@ docker-compose-local.yml
 /www/tests
 .vscode/
 /node_modules
+/build

@@ -3,21 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "react-router-dom": "^6.22.0",
-    "axios": "^1.6.7",
-    "js-cookie": "^3.0.5",
-    "lucide-react": "^0.542.0",
-    "zustand": "^4.4.7",
-    "tailwindcss": "^3.4.1", 
-    "postcss": "^8.4.35", 
-    "autoprefixer": "^10.4.17", 
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "web-vitals": "^2.1.4"
+    "autoprefixer": "^10.4.17",
+    "axios": "^1.6.7",
+    "js-cookie": "^3.0.5",
+    "lucide-react": "^0.542.0",
+    "postcss": "^8.4.35",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.0",
+    "react-scripts": "5.0.1",
+    "tailwindcss": "^3.4.1",
+    "web-vitals": "^2.1.4",
+    "zustand": "^4.4.7"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -43,12 +43,7 @@
       "last 1 safari version"
     ]
   },
-  "resolutions": {
-    "ajv": "^8.12.0",
-    "ajv-keywords": "^5.1.0"
-  },
-  "overrides": {
-    "ajv": "^8.12.0",
-    "ajv-keywords": "^5.1.0"
+  "devDependencies": {
+    "ajv": "^8.12.0"
   }
 }
