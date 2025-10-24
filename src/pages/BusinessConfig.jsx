@@ -11,7 +11,11 @@ import {
     AlertCircle,
     CheckCircle,
     XCircle,
-    Loader2
+    Loader2,
+    Star,
+    Phone,
+    Mail,
+    User
 } from 'lucide-react';
 import { useBusinessConfig } from '../hooks/useBusinessConfig';
 import BusinessModal from '../components/business/BusinessModal';
@@ -187,10 +191,13 @@ const BusinessConfig = () => {
                                             Negocio
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Permite Pago
+                                            Contacto
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Recordatorios
+                                            Responsable
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Configuración
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Acciones
@@ -200,48 +207,82 @@ const BusinessConfig = () => {
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {negocios.map((negocio) => (
                                         <tr key={negocio.id} className="hover:bg-gray-50 transition-colors">
+                                            {/* Negocio */}
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 bg-blue-50 rounded-lg">
                                                         <Building2 className="h-5 w-5 text-blue-600" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium text-gray-900">
-                                                            {negocio.nombre}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500">
-                                                            ID: {negocio.id}
-                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm font-medium text-gray-900">
+                                                                {negocio.nombre}
+                                                            </p>
+                                                            {negocio.es_principal && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+                                                                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                                                    Principal
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {negocio.ruc && (
+                                                            <p className="text-xs text-gray-500">
+                                                                RUC: {negocio.ruc}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                {renderBadge(
-                                                    negocio.permite_pago,
-                                                    negocio.permite_pago ? CheckCircle : XCircle,
-                                                    negocio.permite_pago ? 'Habilitado' : 'Deshabilitado',
-                                                    'bg-green-50 text-green-700',
-                                                    'bg-gray-100 text-gray-600'
-                                                )}
-                                            </td>
+
+                                            {/* Contacto */}
                                             <td className="px-6 py-4">
                                                 <div className="space-y-1">
-                                                    {renderBadge(
-                                                        negocio.envia_recordatorios,
-                                                        negocio.envia_recordatorios ? Bell : XCircle,
-                                                        negocio.envia_recordatorios ? 'Activo' : 'Inactivo',
-                                                        'bg-blue-50 text-blue-700',
-                                                        'bg-gray-100 text-gray-600'
+                                                    {negocio.telefono_contacto && (
+                                                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                                                            <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                                            {negocio.telefono_contacto}
+                                                        </div>
                                                     )}
-                                                    {negocio.envia_recordatorios && (
-                                                        <p className="text-xs text-gray-500 ml-1">
-                                                            {negocio.tipo_recordatorio === 'con_confirmacion'
-                                                                ? 'Con confirmación'
-                                                                : 'Sin confirmación'}
-                                                        </p>
+                                                    {negocio.email && (
+                                                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                                                            <Mail className="h-3.5 w-3.5 text-gray-400" />
+                                                            {negocio.email}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>
+
+                                            {/* Responsable */}
+                                            <td className="px-6 py-4">
+                                                {negocio.nombre_responsable && (
+                                                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                                                        <User className="h-3.5 w-3.5 text-gray-400" />
+                                                        {negocio.nombre_responsable}
+                                                    </div>
+                                                )}
+                                            </td>
+
+                                            {/* Configuración */}
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    {renderBadge(
+                                                        negocio.permite_pago,
+                                                        negocio.permite_pago ? CheckCircle : XCircle,
+                                                        negocio.permite_pago ? 'Pagos' : 'Sin pagos',
+                                                        'bg-green-50 text-green-700',
+                                                        'bg-gray-100 text-gray-600'
+                                                    )}
+                                                    {renderBadge(
+                                                        negocio.envia_recordatorios,
+                                                        negocio.envia_recordatorios ? Bell : XCircle,
+                                                        negocio.envia_recordatorios ? 'Recordatorios' : 'Sin recordatorios',
+                                                        'bg-blue-50 text-blue-700',
+                                                        'bg-gray-100 text-gray-600'
+                                                    )}
+                                                </div>
+                                            </td>
+
+                                            {/* Acciones */}
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
