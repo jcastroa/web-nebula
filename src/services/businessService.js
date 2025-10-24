@@ -7,6 +7,43 @@ class BusinessService {
     }
 
     /**
+     * Procesar errores de respuesta del backend
+     * @param {Object} error - Error de axios
+     * @returns {string} Mensaje de error legible
+     */
+    processError(error) {
+        if (error.response?.data) {
+            const data = error.response.data;
+
+            // Si hay un array de errores de validación
+            if (Array.isArray(data.detail)) {
+                return data.detail.map(err => {
+                    if (typeof err === 'object' && err.msg) {
+                        return `${err.loc?.[1] || 'Campo'}: ${err.msg}`;
+                    }
+                    return String(err);
+                }).join(', ');
+            }
+
+            // Si es un string directo
+            if (typeof data.detail === 'string') {
+                return data.detail;
+            }
+
+            if (typeof data.message === 'string') {
+                return data.message;
+            }
+
+            // Si es un objeto de error individual
+            if (typeof data.detail === 'object' && data.detail.msg) {
+                return data.detail.msg;
+            }
+        }
+
+        return error.message || 'Error desconocido';
+    }
+
+    /**
      * Listar todos los negocios
      * @returns {Promise}
      */
@@ -15,14 +52,14 @@ class BusinessService {
             const response = await api.get(`${this.baseUrl}/`);
             return {
                 success: true,
-                data: response.data.data || response.data, // Soporta ambas estructuras
+                data: response.data.data || response.data,
                 total: response.data.total,
                 message: response.data.message
             };
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || error.response?.data?.message || 'Error al listar negocios'
+                error: this.processError(error)
             };
         }
     }
@@ -42,7 +79,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || error.response?.data?.message || 'Error al obtener negocio'
+                error: this.processError(error)
             };
         }
     }
@@ -62,7 +99,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || error.response?.data?.message || 'Error al crear negocio'
+                error: this.processError(error)
             };
         }
     }
@@ -83,7 +120,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || error.response?.data?.message || 'Error al actualizar negocio'
+                error: this.processError(error)
             };
         }
     }
@@ -104,7 +141,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || error.response?.data?.message || 'Error al cambiar estado del negocio'
+                error: this.processError(error)
             };
         }
     }
@@ -146,7 +183,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || error.response?.data?.message || 'Error al buscar negocios'
+                error: this.processError(error)
             };
         }
     }

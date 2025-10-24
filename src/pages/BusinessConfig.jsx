@@ -17,7 +17,8 @@ import {
     Mail,
     User,
     Power,
-    PowerOff
+    PowerOff,
+    Database
 } from 'lucide-react';
 import { useBusinessConfig } from '../hooks/useBusinessConfig';
 import BusinessModal from '../components/business/BusinessModal';
@@ -311,13 +312,22 @@ const BusinessConfig = () => {
 
                                             {/* Estado */}
                                             <td className="px-6 py-4">
-                                                {renderBadge(
-                                                    negocio.activo,
-                                                    negocio.activo ? CheckCircle : XCircle,
-                                                    negocio.activo ? 'Activo' : 'Inactivo',
-                                                    'bg-green-50 text-green-700',
-                                                    'bg-red-50 text-red-700'
-                                                )}
+                                                <div className="space-y-2">
+                                                    {renderBadge(
+                                                        negocio.activo,
+                                                        negocio.activo ? CheckCircle : XCircle,
+                                                        negocio.activo ? 'Activo' : 'Inactivo',
+                                                        'bg-green-50 text-green-700',
+                                                        'bg-red-50 text-red-700'
+                                                    )}
+                                                    {renderBadge(
+                                                        negocio.existe_en_firestore,
+                                                        Database,
+                                                        negocio.existe_en_firestore ? 'Sincronizado' : 'No sincronizado',
+                                                        'bg-purple-50 text-purple-700',
+                                                        'bg-gray-100 text-gray-600'
+                                                    )}
+                                                </div>
                                             </td>
 
                                             {/* Configuración */}
