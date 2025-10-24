@@ -1,0 +1,336 @@
+// src/pages/BusinessConfig.jsx
+import React, { useState } from 'react';
+import {
+    Building2,
+    Plus,
+    Search,
+    Edit2,
+    Trash2,
+    CreditCard,
+    Bell,
+    AlertCircle,
+    CheckCircle,
+    XCircle,
+    Loader2
+} from 'lucide-react';
+import { useBusinessConfig } from '../hooks/useBusinessConfig';
+import BusinessModal from '../components/business/BusinessModal';
+
+const BusinessConfig = () => {
+    const {
+        negocios,
+        loading,
+        error,
+        searchTerm,
+        setSearchTerm,
+        crearNegocio,
+        actualizarNegocio,
+        eliminarNegocio
+    } = useBusinessConfig();
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedNegocio, setSelectedNegocio] = useState(null);
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Abrir modal para crear
+    const handleCreate = () => {
+        setSelectedNegocio(null);
+        setIsModalOpen(true);
+    };
+
+    // Abrir modal para editar
+    const handleEdit = (negocio) => {
+        setSelectedNegocio(negocio);
+        setIsModalOpen(true);
+    };
+
+    // Guardar (crear o actualizar)
+    const handleSave = async (formData) => {
+        if (selectedNegocio) {
+            return await actualizarNegocio(selectedNegocio.id, formData);
+        } else {
+            return await crearNegocio(formData);
+        }
+    };
+
+    // Eliminar negocio
+    const handleDelete = async (negocio) => {
+        setDeleteConfirm(negocio);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
+
+        setIsDeleting(true);
+        try {
+            await eliminarNegocio(deleteConfirm.id);
+            setDeleteConfirm(null);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Renderizar badge de estado
+    const renderBadge = (value, icon, label, colorTrue, colorFalse) => {
+        const Icon = icon;
+        const colors = value ? colorTrue : colorFalse;
+
+        return (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${colors}`}>
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+            </span>
+        );
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 p-6">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-3 bg-blue-600 rounded-xl">
+                            <Building2 className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">
+                                Gestión de Negocios
+                            </h1>
+                            <p className="text-gray-500 mt-1">
+                                Administra los negocios y sus configuraciones
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Barra de acciones */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                        {/* Búsqueda */}
+                        <div className="relative flex-1 w-full sm:max-w-md">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar negocios..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Botón crear */}
+                        <button
+                            onClick={handleCreate}
+                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Plus className="h-5 w-5" />
+                            Crear Negocio
+                        </button>
+                    </div>
+                </div>
+
+                {/* Contenido principal */}
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    {/* Loading */}
+                    {loading && (
+                        <div className="flex flex-col items-center justify-center py-16">
+                            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+                            <p className="text-gray-500">Cargando negocios...</p>
+                        </div>
+                    )}
+
+                    {/* Error */}
+                    {error && !loading && (
+                        <div className="flex flex-col items-center justify-center py-16 px-4">
+                            <div className="p-4 bg-red-50 rounded-full mb-4">
+                                <AlertCircle className="h-12 w-12 text-red-500" />
+                            </div>
+                            <p className="text-red-600 font-medium">{error}</p>
+                        </div>
+                    )}
+
+                    {/* Lista vacía */}
+                    {!loading && !error && negocios.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-16 px-4">
+                            <div className="p-4 bg-gray-100 rounded-full mb-4">
+                                <Building2 className="h-12 w-12 text-gray-400" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                No hay negocios registrados
+                            </h3>
+                            <p className="text-gray-500 text-center mb-6">
+                                {searchTerm
+                                    ? 'No se encontraron negocios con ese criterio de búsqueda'
+                                    : 'Comienza creando tu primer negocio'
+                                }
+                            </p>
+                            {!searchTerm && (
+                                <button
+                                    onClick={handleCreate}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                >
+                                    <Plus className="h-5 w-5" />
+                                    Crear Primer Negocio
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Tabla de negocios */}
+                    {!loading && !error && negocios.length > 0 && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Negocio
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Permite Pago
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Recordatorios
+                                        </th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Acciones
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {negocios.map((negocio) => (
+                                        <tr key={negocio.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-blue-50 rounded-lg">
+                                                        <Building2 className="h-5 w-5 text-blue-600" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {negocio.nombre}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            ID: {negocio.id}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {renderBadge(
+                                                    negocio.permite_pago,
+                                                    negocio.permite_pago ? CheckCircle : XCircle,
+                                                    negocio.permite_pago ? 'Habilitado' : 'Deshabilitado',
+                                                    'bg-green-50 text-green-700',
+                                                    'bg-gray-100 text-gray-600'
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="space-y-1">
+                                                    {renderBadge(
+                                                        negocio.envia_recordatorios,
+                                                        negocio.envia_recordatorios ? Bell : XCircle,
+                                                        negocio.envia_recordatorios ? 'Activo' : 'Inactivo',
+                                                        'bg-blue-50 text-blue-700',
+                                                        'bg-gray-100 text-gray-600'
+                                                    )}
+                                                    {negocio.envia_recordatorios && (
+                                                        <p className="text-xs text-gray-500 ml-1">
+                                                            {negocio.tipo_recordatorio === 'con_confirmacion'
+                                                                ? 'Con confirmación'
+                                                                : 'Sin confirmación'}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(negocio)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Editar"
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(negocio)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                {/* Resumen */}
+                {!loading && !error && negocios.length > 0 && (
+                    <div className="mt-4 text-sm text-gray-500 text-center">
+                        Mostrando {negocios.length} {negocios.length === 1 ? 'negocio' : 'negocios'}
+                    </div>
+                )}
+            </div>
+
+            {/* Modal de crear/editar */}
+            <BusinessModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                negocio={selectedNegocio}
+            />
+
+            {/* Modal de confirmación de eliminación */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-3 bg-red-50 rounded-full">
+                                <AlertCircle className="h-6 w-6 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Confirmar Eliminación
+                            </h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            ¿Estás seguro de que deseas eliminar el negocio <strong>{deleteConfirm.nombre}</strong>?
+                            Esta acción no se puede deshacer.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                disabled={isDeleting}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                disabled={isDeleting}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Eliminando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="h-4 w-4" />
+                                        Eliminar
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default BusinessConfig;
