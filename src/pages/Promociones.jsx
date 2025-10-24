@@ -1,6 +1,6 @@
 // src/pages/Promociones.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Tag, Calendar, Percent, X, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag, Calendar, Percent, X, Loader2, AlertCircle, DollarSign } from 'lucide-react';
 import promotionService from '../services/promotionService';
 
 export default function Promociones() {
@@ -16,7 +16,8 @@ export default function Promociones() {
   const [formData, setFormData] = useState({
     titulo: '',
     descripcion: '',
-    porcentaje_descuento: '',
+    tipo_descuento: 'porcentaje',
+    valor_descuento: '',
     fecha_inicio: '',
     fecha_fin: ''
   });
@@ -51,7 +52,8 @@ export default function Promociones() {
       setFormData({
         titulo: promocion.titulo,
         descripcion: promocion.descripcion,
-        porcentaje_descuento: promocion.porcentaje_descuento,
+        tipo_descuento: promocion.tipo_descuento || 'porcentaje',
+        valor_descuento: promocion.valor_descuento,
         fecha_inicio: promocion.fecha_inicio,
         fecha_fin: promocion.fecha_fin
       });
@@ -60,7 +62,8 @@ export default function Promociones() {
       setFormData({
         titulo: '',
         descripcion: '',
-        porcentaje_descuento: '',
+        tipo_descuento: 'porcentaje',
+        valor_descuento: '',
         fecha_inicio: '',
         fecha_fin: ''
       });
@@ -75,7 +78,8 @@ export default function Promociones() {
     setFormData({
       titulo: '',
       descripcion: '',
-      porcentaje_descuento: '',
+      tipo_descuento: 'porcentaje',
+      valor_descuento: '',
       fecha_inicio: '',
       fecha_fin: ''
     });
@@ -102,11 +106,15 @@ export default function Promociones() {
       errors.descripcion = 'La descripción es requerida';
     }
 
-    const porcentaje = parseFloat(formData.porcentaje_descuento);
-    if (!formData.porcentaje_descuento || isNaN(porcentaje)) {
-      errors.porcentaje_descuento = 'El porcentaje es requerido';
-    } else if (porcentaje <= 0 || porcentaje > 100) {
-      errors.porcentaje_descuento = 'El porcentaje debe estar entre 1 y 100';
+    const valor = parseFloat(formData.valor_descuento);
+    if (!formData.valor_descuento || isNaN(valor)) {
+      errors.valor_descuento = formData.tipo_descuento === 'porcentaje'
+        ? 'El porcentaje es requerido'
+        : 'El monto es requerido';
+    } else if (valor <= 0) {
+      errors.valor_descuento = 'El valor debe ser mayor a 0';
+    } else if (formData.tipo_descuento === 'porcentaje' && valor > 100) {
+      errors.valor_descuento = 'El porcentaje no puede ser mayor a 100';
     }
 
     if (!formData.fecha_inicio) {
@@ -292,10 +300,19 @@ export default function Promociones() {
                       )}
                     </div>
 
-                    {/* Porcentaje de descuento */}
+                    {/* Descuento (porcentaje o monto) */}
                     <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full">
-                      <Percent className="w-4 h-4" />
-                      <span className="font-bold">{promocion.porcentaje_descuento}</span>
+                      {promocion.tipo_descuento === 'porcentaje' ? (
+                        <>
+                          <Percent className="w-4 h-4" />
+                          <span className="font-bold">{promocion.valor_descuento}%</span>
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign className="w-4 h-4" />
+                          <span className="font-bold">${promocion.valor_descuento}</span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -411,29 +428,66 @@ export default function Promociones() {
                   )}
                 </div>
 
-                {/* Porcentaje de descuento */}
+                {/* Tipo de descuento */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Porcentaje de descuento
+                    Tipo de descuento
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, tipo_descuento: 'porcentaje' }))}
+                      className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-all ${
+                        formData.tipo_descuento === 'porcentaje'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      <Percent className="w-5 h-5" />
+                      <span className="font-medium">Porcentaje</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, tipo_descuento: 'monto_fijo' }))}
+                      className={`flex items-center justify-center gap-2 px-4 py-3 border-2 rounded-lg transition-all ${
+                        formData.tipo_descuento === 'monto_fijo'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      <DollarSign className="w-5 h-5" />
+                      <span className="font-medium">Monto fijo</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Valor del descuento */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {formData.tipo_descuento === 'porcentaje' ? 'Porcentaje de descuento' : 'Monto del descuento'}
                   </label>
                   <div className="relative">
                     <input
                       type="number"
-                      name="porcentaje_descuento"
-                      value={formData.porcentaje_descuento}
+                      name="valor_descuento"
+                      value={formData.valor_descuento}
                       onChange={handleInputChange}
-                      min="1"
-                      max="100"
+                      min="0.01"
+                      max={formData.tipo_descuento === 'porcentaje' ? '100' : undefined}
                       step="0.01"
                       className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        formErrors.porcentaje_descuento ? 'border-red-500' : 'border-gray-300'
+                        formErrors.valor_descuento ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="10"
+                      placeholder={formData.tipo_descuento === 'porcentaje' ? '10' : '100'}
                     />
-                    <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    {formData.tipo_descuento === 'porcentaje' ? (
+                      <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    ) : (
+                      <DollarSign className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    )}
                   </div>
-                  {formErrors.porcentaje_descuento && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.porcentaje_descuento}</p>
+                  {formErrors.valor_descuento && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.valor_descuento}</p>
                   )}
                 </div>
 
