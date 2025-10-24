@@ -75,9 +75,9 @@ export const useBusinessConfig = () => {
         return result;
     }, [cargarNegocios]);
 
-    // Eliminar negocio
-    const eliminarNegocio = useCallback(async (id) => {
-        const result = await businessService.eliminarNegocio(id);
+    // Cambiar estado del negocio
+    const cambiarEstadoNegocio = useCallback(async (id, activo) => {
+        const result = await businessService.cambiarEstadoNegocio(id, activo);
 
         if (result.success) {
             await cargarNegocios();
@@ -85,6 +85,16 @@ export const useBusinessConfig = () => {
 
         return result;
     }, [cargarNegocios]);
+
+    // Activar negocio
+    const activarNegocio = useCallback(async (id) => {
+        return await cambiarEstadoNegocio(id, true);
+    }, [cambiarEstadoNegocio]);
+
+    // Desactivar negocio
+    const desactivarNegocio = useCallback(async (id) => {
+        return await cambiarEstadoNegocio(id, false);
+    }, [cambiarEstadoNegocio]);
 
     // Efecto para cargar negocios al montar
     useEffect(() => {
@@ -112,7 +122,9 @@ export const useBusinessConfig = () => {
         setSearchTerm,
         crearNegocio,
         actualizarNegocio,
-        eliminarNegocio,
+        cambiarEstadoNegocio,
+        activarNegocio,
+        desactivarNegocio,
         cargarNegocios
     };
 };

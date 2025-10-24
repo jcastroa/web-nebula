@@ -91,13 +91,14 @@ class BusinessService {
     }
 
     /**
-     * Eliminar un negocio
+     * Cambiar estado de un negocio (activar/desactivar)
      * @param {string|number} id - ID del negocio
+     * @param {boolean} activo - Nuevo estado del negocio
      * @returns {Promise}
      */
-    async eliminarNegocio(id) {
+    async cambiarEstadoNegocio(id, activo) {
         try {
-            const response = await api.delete(`${this.baseUrl}/${id}`);
+            const response = await api.patch(`${this.baseUrl}/${id}/estado`, { activo });
             return {
                 success: true,
                 data: response.data
@@ -105,9 +106,27 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al eliminar negocio'
+                error: error.response?.data?.detail || 'Error al cambiar estado del negocio'
             };
         }
+    }
+
+    /**
+     * Activar un negocio
+     * @param {string|number} id - ID del negocio
+     * @returns {Promise}
+     */
+    async activarNegocio(id) {
+        return this.cambiarEstadoNegocio(id, true);
+    }
+
+    /**
+     * Desactivar un negocio
+     * @param {string|number} id - ID del negocio
+     * @returns {Promise}
+     */
+    async desactivarNegocio(id) {
+        return this.cambiarEstadoNegocio(id, false);
     }
 
     /**

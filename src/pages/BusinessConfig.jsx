@@ -15,7 +15,9 @@ import {
     Star,
     Phone,
     Mail,
-    User
+    User,
+    Power,
+    PowerOff
 } from 'lucide-react';
 import { useBusinessConfig } from '../hooks/useBusinessConfig';
 import BusinessModal from '../components/business/BusinessModal';
@@ -29,13 +31,13 @@ const BusinessConfig = () => {
         setSearchTerm,
         crearNegocio,
         actualizarNegocio,
-        eliminarNegocio
+        cambiarEstadoNegocio
     } = useBusinessConfig();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedNegocio, setSelectedNegocio] = useState(null);
-    const [deleteConfirm, setDeleteConfirm] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Abrir modal para crear
     const handleCreate = () => {
@@ -58,20 +60,24 @@ const BusinessConfig = () => {
         }
     };
 
-    // Eliminar negocio
-    const handleDelete = async (negocio) => {
-        setDeleteConfirm(negocio);
+    // Cambiar estado del negocio
+    const handleToggleStatus = (negocio) => {
+        setConfirmAction({
+            negocio,
+            newStatus: !negocio.activo,
+            action: negocio.activo ? 'desactivar' : 'activar'
+        });
     };
 
-    const confirmDelete = async () => {
-        if (!deleteConfirm) return;
+    const confirmToggleStatus = async () => {
+        if (!confirmAction) return;
 
-        setIsDeleting(true);
+        setIsProcessing(true);
         try {
-            await eliminarNegocio(deleteConfirm.id);
-            setDeleteConfirm(null);
+            await cambiarEstadoNegocio(confirmAction.negocio.id, confirmAction.newStatus);
+            setConfirmAction(null);
         } finally {
-            setIsDeleting(false);
+            setIsProcessing(false);
         }
     };
 
@@ -197,6 +203,9 @@ const BusinessConfig = () => {
                                             Responsable
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Estado
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Configuración
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -262,6 +271,17 @@ const BusinessConfig = () => {
                                                 )}
                                             </td>
 
+                                            {/* Estado */}
+                                            <td className="px-6 py-4">
+                                                {renderBadge(
+                                                    negocio.activo,
+                                                    negocio.activo ? CheckCircle : XCircle,
+                                                    negocio.activo ? 'Activo' : 'Inactivo',
+                                                    'bg-green-50 text-green-700',
+                                                    'bg-red-50 text-red-700'
+                                                )}
+                                            </td>
+
                                             {/* Configuración */}
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-wrap gap-2">
@@ -293,11 +313,19 @@ const BusinessConfig = () => {
                                                         <Edit2 className="h-4 w-4" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(negocio)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Eliminar"
+                                                        onClick={() => handleToggleStatus(negocio)}
+                                                        className={`p-2 rounded-lg transition-colors ${
+                                                            negocio.activo
+                                                                ? 'text-red-600 hover:bg-red-50'
+                                                                : 'text-green-600 hover:bg-green-50'
+                                                        }`}
+                                                        title={negocio.activo ? 'Desactivar' : 'Activar'}
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        {negocio.activo ? (
+                                                            <PowerOff className="h-4 w-4" />
+                                                        ) : (
+                                                            <Power className="h-4 w-4" />
+                                                        )}
                                                     </button>
                                                 </div>
                                             </td>
@@ -325,44 +353,70 @@ const BusinessConfig = () => {
                 negocio={selectedNegocio}
             />
 
-            {/* Modal de confirmación de eliminación */}
-            {deleteConfirm && (
+            {/* Modal de confirmación de cambio de estado */}
+            {confirmAction && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="p-3 bg-red-50 rounded-full">
-                                <AlertCircle className="h-6 w-6 text-red-600" />
+                            <div className={`p-3 rounded-full ${
+                                confirmAction.action === 'desactivar'
+                                    ? 'bg-red-50'
+                                    : 'bg-green-50'
+                            }`}>
+                                {confirmAction.action === 'desactivar' ? (
+                                    <PowerOff className="h-6 w-6 text-red-600" />
+                                ) : (
+                                    <Power className="h-6 w-6 text-green-600" />
+                                )}
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900">
-                                Confirmar Eliminación
+                                Confirmar {confirmAction.action === 'desactivar' ? 'Desactivación' : 'Activación'}
                             </h3>
                         </div>
                         <p className="text-gray-600 mb-6">
-                            ¿Estás seguro de que deseas eliminar el negocio <strong>{deleteConfirm.nombre}</strong>?
-                            Esta acción no se puede deshacer.
+                            ¿Estás seguro de que deseas {confirmAction.action} el negocio{' '}
+                            <strong>{confirmAction.negocio.nombre}</strong>?
+                            {confirmAction.action === 'desactivar' && (
+                                <span className="block mt-2 text-sm text-gray-500">
+                                    El negocio no estará disponible mientras esté desactivado.
+                                </span>
+                            )}
                         </p>
                         <div className="flex gap-3 justify-end">
                             <button
-                                onClick={() => setDeleteConfirm(null)}
+                                onClick={() => setConfirmAction(null)}
                                 className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                                disabled={isDeleting}
+                                disabled={isProcessing}
                             >
                                 Cancelar
                             </button>
                             <button
-                                onClick={confirmDelete}
-                                disabled={isDeleting}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed flex items-center gap-2"
+                                onClick={confirmToggleStatus}
+                                disabled={isProcessing}
+                                className={`px-4 py-2 text-white rounded-lg transition-colors disabled:cursor-not-allowed flex items-center gap-2 ${
+                                    confirmAction.action === 'desactivar'
+                                        ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-400'
+                                        : 'bg-green-600 hover:bg-green-700 disabled:bg-green-400'
+                                }`}
                             >
-                                {isDeleting ? (
+                                {isProcessing ? (
                                     <>
                                         <Loader2 className="h-4 w-4 animate-spin" />
-                                        Eliminando...
+                                        {confirmAction.action === 'desactivar' ? 'Desactivando...' : 'Activando...'}
                                     </>
                                 ) : (
                                     <>
-                                        <Trash2 className="h-4 w-4" />
-                                        Eliminar
+                                        {confirmAction.action === 'desactivar' ? (
+                                            <>
+                                                <PowerOff className="h-4 w-4" />
+                                                Desactivar
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Power className="h-4 w-4" />
+                                                Activar
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </button>
