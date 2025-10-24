@@ -12,7 +12,7 @@ class BusinessService {
      */
     async listarNegocios() {
         try {
-            const response = await api.get(`${this.baseUrl}`);
+            const response = await api.get(`${this.baseUrl}/`);
             return {
                 success: true,
                 data: response.data
@@ -20,7 +20,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al listar negocios'
+                error: error.response?.data?.detail || error.response?.data?.message || 'Error al listar negocios'
             };
         }
     }
@@ -32,7 +32,7 @@ class BusinessService {
      */
     async obtenerNegocio(id) {
         try {
-            const response = await api.get(`${this.baseUrl}/${id}`);
+            const response = await api.get(`${this.baseUrl}/${id}/`);
             return {
                 success: true,
                 data: response.data
@@ -40,7 +40,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al obtener negocio'
+                error: error.response?.data?.detail || error.response?.data?.message || 'Error al obtener negocio'
             };
         }
     }
@@ -56,7 +56,7 @@ class BusinessService {
      */
     async crearNegocio(negocio) {
         try {
-            const response = await api.post(`${this.baseUrl}`, negocio);
+            const response = await api.post(`${this.baseUrl}/`, negocio);
             return {
                 success: true,
                 data: response.data
@@ -64,7 +64,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al crear negocio'
+                error: error.response?.data?.detail || error.response?.data?.message || 'Error al crear negocio'
             };
         }
     }
@@ -77,7 +77,7 @@ class BusinessService {
      */
     async actualizarNegocio(id, negocio) {
         try {
-            const response = await api.put(`${this.baseUrl}/${id}`, negocio);
+            const response = await api.put(`${this.baseUrl}/${id}/`, negocio);
             return {
                 success: true,
                 data: response.data
@@ -85,7 +85,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al actualizar negocio'
+                error: error.response?.data?.detail || error.response?.data?.message || 'Error al actualizar negocio'
             };
         }
     }
@@ -98,7 +98,7 @@ class BusinessService {
      */
     async cambiarEstadoNegocio(id, activo) {
         try {
-            const response = await api.patch(`${this.baseUrl}/${id}/estado`, { activo });
+            const response = await api.patch(`${this.baseUrl}/${id}/estado/`, { activo });
             return {
                 success: true,
                 data: response.data
@@ -106,7 +106,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al cambiar estado del negocio'
+                error: error.response?.data?.detail || error.response?.data?.message || 'Error al cambiar estado del negocio'
             };
         }
     }
@@ -136,7 +136,7 @@ class BusinessService {
      */
     async buscarNegocios(termino) {
         try {
-            const response = await api.get(`${this.baseUrl}/buscar`, {
+            const response = await api.get(`${this.baseUrl}/buscar/`, {
                 params: { q: termino }
             });
             return {
@@ -146,7 +146,7 @@ class BusinessService {
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.detail || 'Error al buscar negocios'
+                error: error.response?.data?.detail || error.response?.data?.message || 'Error al buscar negocios'
             };
         }
     }

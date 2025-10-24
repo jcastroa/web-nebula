@@ -1,5 +1,5 @@
 // src/hooks/useBusinessConfig.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import businessService from '../services/businessService';
 
 export const useBusinessConfig = () => {
@@ -7,6 +7,7 @@ export const useBusinessConfig = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const isMounted = useRef(false);
 
     // Cargar negocios
     const cargarNegocios = useCallback(async () => {
@@ -96,13 +97,21 @@ export const useBusinessConfig = () => {
         return await cambiarEstadoNegocio(id, false);
     }, [cambiarEstadoNegocio]);
 
-    // Efecto para cargar negocios al montar
+    // Efecto inicial para cargar negocios al montar (solo una vez)
     useEffect(() => {
-        cargarNegocios();
-    }, [cargarNegocios]);
+        if (!isMounted.current) {
+            isMounted.current = true;
+            cargarNegocios();
+        }
+    }, []); // Sin dependencias - solo se ejecuta al montar
 
-    // Efecto para búsqueda con debounce
+    // Efecto para búsqueda con debounce (solo se ejecuta cuando searchTerm cambia)
     useEffect(() => {
+        // Evitar ejecutar en el primer render
+        if (!isMounted.current) {
+            return;
+        }
+
         const timeoutId = setTimeout(() => {
             if (searchTerm) {
                 buscarNegocios(searchTerm);
@@ -112,7 +121,7 @@ export const useBusinessConfig = () => {
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [searchTerm, buscarNegocios, cargarNegocios]);
+    }, [searchTerm]); // Solo depende de searchTerm
 
     return {
         negocios,

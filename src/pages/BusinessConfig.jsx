@@ -1,5 +1,5 @@
 // src/pages/BusinessConfig.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Building2,
     Plus,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useBusinessConfig } from '../hooks/useBusinessConfig';
 import BusinessModal from '../components/business/BusinessModal';
+import Toast from '../components/common/Toast';
 
 const BusinessConfig = () => {
     const {
@@ -38,6 +39,14 @@ const BusinessConfig = () => {
     const [selectedNegocio, setSelectedNegocio] = useState(null);
     const [confirmAction, setConfirmAction] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    // Mostrar toast cuando hay error del hook
+    useEffect(() => {
+        if (error) {
+            setToast({ message: error, type: 'error' });
+        }
+    }, [error]);
 
     // Abrir modal para crear
     const handleCreate = () => {
@@ -53,11 +62,23 @@ const BusinessConfig = () => {
 
     // Guardar (crear o actualizar)
     const handleSave = async (formData) => {
+        let result;
         if (selectedNegocio) {
-            return await actualizarNegocio(selectedNegocio.id, formData);
+            result = await actualizarNegocio(selectedNegocio.id, formData);
+            if (result.success) {
+                setToast({ message: 'Negocio actualizado exitosamente', type: 'success' });
+            } else {
+                setToast({ message: result.error || 'Error al actualizar negocio', type: 'error' });
+            }
         } else {
-            return await crearNegocio(formData);
+            result = await crearNegocio(formData);
+            if (result.success) {
+                setToast({ message: 'Negocio creado exitosamente', type: 'success' });
+            } else {
+                setToast({ message: result.error || 'Error al crear negocio', type: 'error' });
+            }
         }
+        return result;
     };
 
     // Cambiar estado del negocio
@@ -74,8 +95,25 @@ const BusinessConfig = () => {
 
         setIsProcessing(true);
         try {
-            await cambiarEstadoNegocio(confirmAction.negocio.id, confirmAction.newStatus);
-            setConfirmAction(null);
+            const result = await cambiarEstadoNegocio(confirmAction.negocio.id, confirmAction.newStatus);
+            if (result.success) {
+                const action = confirmAction.action === 'desactivar' ? 'desactivado' : 'activado';
+                setToast({
+                    message: `Negocio ${action} exitosamente`,
+                    type: 'success'
+                });
+                setConfirmAction(null);
+            } else {
+                setToast({
+                    message: result.error || 'Error al cambiar estado del negocio',
+                    type: 'error'
+                });
+            }
+        } catch (error) {
+            setToast({
+                message: 'Error inesperado al cambiar estado del negocio',
+                type: 'error'
+            });
         } finally {
             setIsProcessing(false);
         }
@@ -423,6 +461,15 @@ const BusinessConfig = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Toast para mensajes */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
             )}
         </div>
     );
