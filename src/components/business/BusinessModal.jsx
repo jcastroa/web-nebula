@@ -15,10 +15,11 @@ const BusinessModal = ({
         telefono_contacto: '',
         email: '',
         nombre_responsable: '',
+        direccion: '',
         es_principal: false,
         permite_pago: false,
         envia_recordatorios: false,
-        tipo_recordatorio: 'sin_confirmacion'
+        con_confirmacion_cita: false
     });
 
     const [errors, setErrors] = useState({});
@@ -33,10 +34,11 @@ const BusinessModal = ({
                 telefono_contacto: negocio.telefono_contacto || '',
                 email: negocio.email || '',
                 nombre_responsable: negocio.nombre_responsable || '',
+                direccion: negocio.direccion || '',
                 es_principal: negocio.es_principal || false,
                 permite_pago: negocio.permite_pago || false,
                 envia_recordatorios: negocio.envia_recordatorios || false,
-                tipo_recordatorio: negocio.tipo_recordatorio || 'sin_confirmacion'
+                con_confirmacion_cita: negocio.con_confirmacion_cita || false
             });
         } else if (isOpen && !negocio) {
             // Reset para nuevo negocio
@@ -46,10 +48,11 @@ const BusinessModal = ({
                 telefono_contacto: '',
                 email: '',
                 nombre_responsable: '',
+                direccion: '',
                 es_principal: false,
                 permite_pago: false,
                 envia_recordatorios: false,
-                tipo_recordatorio: 'sin_confirmacion'
+                con_confirmacion_cita: false
             });
         }
         setErrors({});
@@ -264,31 +267,53 @@ const BusinessModal = ({
                         </div>
                     </div>
 
-                    {/* Sección: Responsable */}
+                    {/* Sección: Responsable y Dirección */}
                     <div>
                         <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <User className="h-4 w-4" />
-                            Responsable
+                            Responsable y Ubicación
                         </h3>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Nombre del Responsable
-                                <span className="text-red-500 ml-1">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="nombre_responsable"
-                                value={formData.nombre_responsable}
-                                onChange={handleChange}
-                                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                    errors.nombre_responsable ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                                }`}
-                                placeholder="Ej: Juan Pérez García"
-                                disabled={isSubmitting}
-                            />
-                            {errors.nombre_responsable && (
-                                <p className="mt-1 text-sm text-red-600">{errors.nombre_responsable}</p>
-                            )}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nombre del Responsable
+                                    <span className="text-red-500 ml-1">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nombre_responsable"
+                                    value={formData.nombre_responsable}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                        errors.nombre_responsable ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="Ej: Juan Pérez García"
+                                    disabled={isSubmitting}
+                                />
+                                {errors.nombre_responsable && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.nombre_responsable}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Dirección
+                                </label>
+                                <textarea
+                                    name="direccion"
+                                    value={formData.direccion}
+                                    onChange={handleChange}
+                                    rows="2"
+                                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                        errors.direccion ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                    }`}
+                                    placeholder="Ej: Av. Principal 123, Lima"
+                                    disabled={isSubmitting}
+                                />
+                                {errors.direccion && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.direccion}</p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -370,47 +395,25 @@ const BusinessModal = ({
                                     </div>
                                 </div>
 
-                                {/* Tipo de recordatorio (solo si está habilitado) */}
+                                {/* Con confirmación de cita (solo si está habilitado) */}
                                 {formData.envia_recordatorios && (
-                                    <div className="ml-7 mt-3 space-y-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Tipo de Recordatorio
-                                        </label>
-                                        <div className="space-y-2">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="tipo_recordatorio"
-                                                    value="sin_confirmacion"
-                                                    checked={formData.tipo_recordatorio === 'sin_confirmacion'}
-                                                    onChange={handleChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                                                    disabled={isSubmitting}
-                                                />
-                                                <span className="text-sm text-gray-700">
-                                                    Sin confirmación
-                                                    <span className="text-gray-500 ml-2">
-                                                        (Solo recordatorio informativo)
-                                                    </span>
-                                                </span>
+                                    <div className="ml-7 flex items-start gap-3">
+                                        <input
+                                            type="checkbox"
+                                            name="con_confirmacion_cita"
+                                            id="con_confirmacion_cita"
+                                            checked={formData.con_confirmacion_cita}
+                                            onChange={handleChange}
+                                            className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                            disabled={isSubmitting}
+                                        />
+                                        <div className="flex-1">
+                                            <label htmlFor="con_confirmacion_cita" className="text-sm font-medium text-gray-700 cursor-pointer">
+                                                Con confirmación de cita
                                             </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="tipo_recordatorio"
-                                                    value="con_confirmacion"
-                                                    checked={formData.tipo_recordatorio === 'con_confirmacion'}
-                                                    onChange={handleChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                                                    disabled={isSubmitting}
-                                                />
-                                                <span className="text-sm text-gray-700">
-                                                    Con confirmación
-                                                    <span className="text-gray-500 ml-2">
-                                                        (Solicita confirmación del cliente)
-                                                    </span>
-                                                </span>
-                                            </label>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                Solicita confirmación del cliente al enviar el recordatorio
+                                            </p>
                                         </div>
                                     </div>
                                 )}

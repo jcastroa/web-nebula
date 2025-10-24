@@ -8,6 +8,7 @@ export const useBusinessConfig = () => {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const isMounted = useRef(false);
+    const isInitialLoad = useRef(true);
 
     // Cargar negocios
     const cargarNegocios = useCallback(async () => {
@@ -105,10 +106,11 @@ export const useBusinessConfig = () => {
         }
     }, []); // Sin dependencias - solo se ejecuta al montar
 
-    // Efecto para búsqueda con debounce (solo se ejecuta cuando searchTerm cambia)
+    // Efecto para búsqueda con debounce (solo se ejecuta cuando searchTerm cambia después del montaje)
     useEffect(() => {
         // Evitar ejecutar en el primer render
-        if (!isMounted.current) {
+        if (isInitialLoad.current) {
+            isInitialLoad.current = false;
             return;
         }
 

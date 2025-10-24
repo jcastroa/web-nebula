@@ -15,7 +15,9 @@ class BusinessService {
             const response = await api.get(`${this.baseUrl}/`);
             return {
                 success: true,
-                data: response.data
+                data: response.data.data || response.data, // Soporta ambas estructuras
+                total: response.data.total,
+                message: response.data.message
             };
         } catch (error) {
             return {
@@ -35,7 +37,7 @@ class BusinessService {
             const response = await api.get(`${this.baseUrl}/${id}/`);
             return {
                 success: true,
-                data: response.data
+                data: response.data.data || response.data
             };
         } catch (error) {
             return {
@@ -48,10 +50,6 @@ class BusinessService {
     /**
      * Crear un nuevo negocio
      * @param {Object} negocio - Datos del negocio
-     * @param {string} negocio.nombre - Nombre del negocio
-     * @param {boolean} negocio.permite_pago - Si permite pago
-     * @param {boolean} negocio.envia_recordatorios - Si envía recordatorios
-     * @param {string} negocio.tipo_recordatorio - Tipo de recordatorio ('con_confirmacion' | 'sin_confirmacion')
      * @returns {Promise}
      */
     async crearNegocio(negocio) {
@@ -59,7 +57,7 @@ class BusinessService {
             const response = await api.post(`${this.baseUrl}/`, negocio);
             return {
                 success: true,
-                data: response.data
+                data: response.data.data || response.data
             };
         } catch (error) {
             return {
@@ -80,7 +78,7 @@ class BusinessService {
             const response = await api.put(`${this.baseUrl}/${id}/`, negocio);
             return {
                 success: true,
-                data: response.data
+                data: response.data.data || response.data
             };
         } catch (error) {
             return {
@@ -101,7 +99,7 @@ class BusinessService {
             const response = await api.patch(`${this.baseUrl}/${id}/estado/`, { activo });
             return {
                 success: true,
-                data: response.data
+                data: response.data.data || response.data
             };
         } catch (error) {
             return {
@@ -141,7 +139,9 @@ class BusinessService {
             });
             return {
                 success: true,
-                data: response.data
+                data: response.data.data || response.data,
+                total: response.data.total,
+                message: response.data.message
             };
         } catch (error) {
             return {
