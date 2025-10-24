@@ -111,40 +111,24 @@ ${preguntasFrecuentes}`;
     }
 
     /**
-     * Configuración por defecto
+     * Configuración por defecto (campos vacíos)
      */
     getConfiguracionDefault() {
         return {
             negocio: {
-                nombre: 'Salud y Vida',
-                horario: 'Lunes a viernes de 8:00 a 20:00, sábados de 9:00 a 14:00',
-                telefono: '(123) 456-7890',
-                direccion: 'Av. Principal 123, Colonia Centro',
-                sitioWeb: 'www.saludyvida.com',
-                email: 'citas@saludyvida.com'
+                nombre: '',
+                horario: '',
+                telefono: '',
+                direccion: '',
+                sitioWeb: '',
+                email: ''
             },
             servicios: {
-                especialidades: `- Medicina General: S/120
-- Pediatría: S/150
-- Ginecología: S/180
-- Cardiología: S/200
-- Dermatología: S/170
-- Nutrición: S/130
-- Psicología: S/160
-- Ortopedia: S/190`,
-                preciosAdicionales: `- Primera consulta (paciente nuevo): +S/20 sobre el precio base
-- Consulta de urgencia (mismo día): +S/50 sobre el precio base
-- Consulta a domicilio: +S/100 sobre el precio base
-- Consulta virtual: -S/20 sobre el precio base
-- Descuento para adultos mayores y niños: 10% del precio base`
+                especialidades: '',
+                preciosAdicionales: ''
             },
             politicas: {
-                protocolos: `- Las citas deben agendarse con al menos 24 horas de anticipación
-- Cancelaciones deben realizarse con mínimo 12 horas de antelación
-- Se requiere llegar 15 minutos antes de la hora programada
-- Traer identificación oficial y tarjeta del seguro médico (si aplica)
-- Para primera consulta, traer historial médico relevante
-- Pago de consulta al momento de la atención`
+                protocolos: ''
             },
             preguntasFrecuentes: ''
         };

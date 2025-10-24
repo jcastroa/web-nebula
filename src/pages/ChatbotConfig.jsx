@@ -376,7 +376,7 @@ const SeccionServicios = ({ data, onChange }) => {
                         onChange={(e) => onChange('especialidades', e.target.value)}
                         rows={10}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                        placeholder="- Medicina General: S/120&#10;- Pediatría: S/150&#10;- Ginecología: S/180"
+                        placeholder="Ejemplo:&#10;- Medicina General: S/120&#10;- Pediatría: S/150&#10;- Ginecología: S/180&#10;- Cardiología: S/200&#10;- Dermatología: S/170&#10;- Nutrición: S/130&#10;- Psicología: S/160&#10;- Ortopedia: S/190"
                     />
                 </div>
 
@@ -392,7 +392,7 @@ const SeccionServicios = ({ data, onChange }) => {
                         onChange={(e) => onChange('preciosAdicionales', e.target.value)}
                         rows={6}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                        placeholder="- Primera consulta: +S/20&#10;- Consulta urgencia: +S/50"
+                        placeholder="Ejemplo:&#10;- Primera consulta (paciente nuevo): +S/20 sobre el precio base&#10;- Consulta de urgencia (mismo día): +S/50 sobre el precio base&#10;- Consulta a domicilio: +S/100 sobre el precio base&#10;- Consulta virtual: -S/20 sobre el precio base&#10;- Descuento para adultos mayores y niños: 10% del precio base"
                     />
                 </div>
             </div>
@@ -426,7 +426,7 @@ const SeccionPoliticas = ({ data, onChange }) => {
                         onChange={(e) => onChange('protocolos', e.target.value)}
                         rows={8}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                        placeholder="- Las citas deben agendarse con 24 horas de anticipación&#10;- Llegar 15 minutos antes"
+                        placeholder="Ejemplo:&#10;- Las citas deben agendarse con al menos 24 horas de anticipación&#10;- Cancelaciones deben realizarse con mínimo 12 horas de antelación&#10;- Se requiere llegar 15 minutos antes de la hora programada&#10;- Traer identificación oficial y tarjeta del seguro médico (si aplica)&#10;- Para primera consulta, traer historial médico relevante&#10;- Pago de consulta al momento de la atención"
                     />
                 </div>
             </div>
