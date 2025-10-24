@@ -88,6 +88,7 @@ import TemplateLayout from './components/layout/TemplateLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
+import ChatbotConfig from './pages/ChatbotConfig';
 
 // Wrapper que aplica el Layout automáticamente a las rutas protegidas
 const LayoutWrapper = ({ children }) => {
@@ -303,6 +304,15 @@ function App() {
           element={
             <PrivateRoute>
               <WhatsAppVinculacion />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/configuracion/chatbot"
+          element={
+            <PrivateRoute>
+              <ChatbotConfig />
             </PrivateRoute>
           }
         />
