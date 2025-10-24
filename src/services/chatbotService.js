@@ -54,8 +54,7 @@ class ChatbotService {
             negocio,
             servicios,
             preguntasFrecuentes,
-            politicas,
-            promociones
+            politicas
         } = config;
 
         let prompt = `Eres un asistente médico virtual del centro '${negocio.nombre}'. Tu misión es ayudar de forma clara y profesional a los pacientes.
@@ -103,11 +102,6 @@ TONO Y ESTILO:
 - Respetuoso de la privacidad y confidencialidad
 - Paciente para explicar procesos y responder dudas`;
 
-        if (promociones && promociones.trim()) {
-            prompt += `\n\nPROMOCIONES Y NOVEDADES:
-${promociones}`;
-        }
-
         if (preguntasFrecuentes && preguntasFrecuentes.trim()) {
             prompt += `\n\nPREGUNTAS FRECUENTES:
 ${preguntasFrecuentes}`;
@@ -152,8 +146,7 @@ ${preguntasFrecuentes}`;
 - Para primera consulta, traer historial médico relevante
 - Pago de consulta al momento de la atención`
             },
-            preguntasFrecuentes: '',
-            promociones: ''
+            preguntasFrecuentes: ''
         };
     }
 

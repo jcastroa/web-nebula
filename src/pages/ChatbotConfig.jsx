@@ -37,8 +37,7 @@ const ChatbotConfig = () => {
         politicas: {
             protocolos: ''
         },
-        preguntasFrecuentes: '',
-        promociones: ''
+        preguntasFrecuentes: ''
     });
 
     useEffect(() => {
@@ -226,12 +225,6 @@ const ChatbotConfig = () => {
                 <SeccionPreguntasFrecuentes
                     data={config.preguntasFrecuentes}
                     onChange={(value) => handleInputChange('preguntasFrecuentes', null, value)}
-                />
-
-                {/* Sección 5: Promociones y Novedades */}
-                <SeccionPromociones
-                    data={config.promociones}
-                    onChange={(value) => handleInputChange('promociones', null, value)}
                 />
 
                 {/* Botones de acción inferiores */}
@@ -461,32 +454,6 @@ const SeccionPreguntasFrecuentes = ({ data, onChange }) => {
                     rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
                     placeholder="Ejemplo:&#10;¿Aceptan seguros médicos?&#10;Sí, trabajamos con los principales seguros del país...&#10;&#10;¿Hacen consultas a domicilio?&#10;Sí, contamos con servicio a domicilio..."
-                />
-            </div>
-        </div>
-    );
-};
-
-// Componente: Sección Promociones
-const SeccionPromociones = ({ data, onChange }) => {
-    return (
-        <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-pink-600" />
-                    <h2 className="text-lg font-semibold text-gray-800">Promociones y Novedades</h2>
-                </div>
-                <p className="text-sm text-gray-600 mt-1">
-                    Promociones actuales, descuentos especiales o novedades del consultorio (opcional).
-                </p>
-            </div>
-            <div className="p-6">
-                <textarea
-                    value={data}
-                    onChange={(e) => onChange(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                    placeholder="Ejemplo:&#10;- Promoción mes de la salud: 20% de descuento en chequeos preventivos&#10;- Nueva especialidad: Dermatología estética&#10;- Horario extendido: Ahora abrimos los domingos"
                 />
             </div>
         </div>
