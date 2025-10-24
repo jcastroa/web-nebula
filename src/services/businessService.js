@@ -165,26 +165,14 @@ class BusinessService {
     }
 
     /**
-     * Buscar negocios por nombre o ID
+     * Buscar negocios por cualquier criterio
      * @param {string} termino - Término de búsqueda
      * @returns {Promise}
      */
     async buscarNegocios(termino) {
         try {
-            // Si el término es un número, buscamos por ID
-            const params = {};
-            const terminoTrim = termino.trim();
-
-            if (terminoTrim && !isNaN(terminoTrim) && terminoTrim !== '') {
-                // Es un número, buscar por negocio_id
-                params.negocio_id = parseInt(terminoTrim, 10);
-            } else {
-                // Es texto, buscar por nombre
-                params.q = terminoTrim;
-            }
-
             const response = await api.get(`${this.baseUrl}/buscar/`, {
-                params: params
+                params: { q: termino }
             });
             return {
                 success: true,
