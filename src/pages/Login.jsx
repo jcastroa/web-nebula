@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { processValidationErrors } from '../utils/errorUtils';
-import { Rocket, User, Eye, EyeOff} from 'lucide-react';
+import { Rocket, User, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -77,25 +77,25 @@ const Login = () => {
     };
 
     return (
-        
+
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                
+
                 {/* Contenedor principal */}
                 <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-                    
+
                     {/* Header */}
                     <div className="px-8 pt-8 pb-6">
                         <div className="text-center space-y-4">
-                           {/* Logo - imagen de prueba */}
-                          <div className="mx-auto text-center">
-                                <img 
-                                    src="/logo_nebula_recortado.png" 
+                            {/* Logo - imagen de prueba */}
+                            <div className="mx-auto text-center">
+                                <img
+                                    src="/logo_4.png"
                                     alt="Logo de la empresa"
                                     className=" h-32 w-32 mx-auto object-contain"
                                 />
                             </div>
-                            
+
                             {/* Título minimalista */}
                             <div>
                                 <h1 className="text-2xl font-semibold text-slate-900">Iniciar Sesión</h1>
@@ -106,7 +106,7 @@ const Login = () => {
 
                     {/* Formulario */}
                     <div className="px-8 pb-8">
-                        
+
                         {/* Error general */}
                         {generalError && (
                             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -117,7 +117,7 @@ const Login = () => {
                                         </svg>
                                         <span className="text-sm text-red-800 font-medium">{generalError}</span>
                                     </div>
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => setGeneralError('')}
                                         className="text-red-400 hover:text-red-600 transition-colors"
@@ -131,7 +131,7 @@ const Login = () => {
                         )}
 
                         <div onSubmit={handleSubmit} className="space-y-5">
-                            
+
                             {/* Campo Usuario */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -234,10 +234,10 @@ const Login = () => {
                     </div>
 
                     {/* Footer minimalista */}
-                  <div className="px-8 py-6 bg-slate-50 border-t border-slate-100">
+                    <div className="px-8 py-6 bg-slate-50 border-t border-slate-100">
                         <div className="flex items-center justify-center text-xs text-slate-500">
                             <Rocket className="w-4 h-4 mr-1 text-slate-400" />
-                            Nebula v 0.1
+                            Cita247 v.0.1
                         </div>
                     </div>
 
@@ -245,7 +245,18 @@ const Login = () => {
 
                 {/* Branding discreto */}
                 <div className="text-center mt-8">
-                    <p className="text-xs text-slate-400">Sistema de Gestión Empresarial</p>
+                    <p className="text-xs text-slate-400">
+                        © 2025{" "}
+                        <a
+                            href="https://neuronasystems.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-slate-500 hover:text-slate-700 transition-colors"
+                        >
+                            Neurona Systems
+                        </a>
+                        . Todos los derechos reservados.
+                    </p>
                 </div>
 
             </div>
