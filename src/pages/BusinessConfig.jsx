@@ -137,7 +137,7 @@ const BusinessConfig = () => {
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
+                <div className="mb-6">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-3 bg-blue-600 rounded-xl">
                             <Building2 className="h-6 w-6 text-white" />
@@ -154,29 +154,27 @@ const BusinessConfig = () => {
                 </div>
 
                 {/* Barra de acciones */}
-                <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                        {/* Búsqueda */}
-                        <div className="relative flex-1 w-full sm:max-w-md">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar negocios..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        {/* Botón crear */}
-                        <button
-                            onClick={handleCreate}
-                            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                            <Plus className="h-5 w-5" />
-                            Crear Negocio
-                        </button>
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-4">
+                    {/* Búsqueda */}
+                    <div className="relative flex-1 w-full sm:max-w-md">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar negocios..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+                        />
                     </div>
+
+                    {/* Botón crear */}
+                    <button
+                        onClick={handleCreate}
+                        className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <Plus className="h-5 w-5" />
+                        Crear Negocio
+                    </button>
                 </div>
 
                 {/* Contenido principal */}
