@@ -171,8 +171,9 @@ class BusinessService {
      */
     async buscarNegocios(termino) {
         try {
-            const response = await api.get(`${this.baseUrl}/buscar/`, {
-                params: { q: termino }
+            const response = await api.get(`${this.baseUrl}/`, {
+                params: { search: termino,
+                    activo_only: false }
             });
             return {
                 success: true,
