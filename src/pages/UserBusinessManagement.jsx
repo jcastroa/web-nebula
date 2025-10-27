@@ -1,11 +1,16 @@
-import React, { useState, useCallback } from 'react';
-import { Users, ArrowLeft, CheckCircle, AlertTriangle, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus } from 'lucide-react';
+import UserList from '../components/users/UserList';
 import UserForm from '../components/users/UserForm';
 import BusinessAssignmentForm from '../components/users/BusinessAssignmentForm';
 import BusinessAssignmentList from '../components/users/BusinessAssignmentList';
 import {
   createUser,
+  getUsers,
+  updateUser,
+  deactivateUser,
+  activateUser,
+  getRoles,
   createBusinessAssignment,
   getUserAssignments,
   updateBusinessAssignment,
@@ -38,50 +43,183 @@ const ErrorAlert = ({ message, onClose }) => (
  * Página para gestión de usuarios y asignaciones a negocios
  */
 const UserBusinessManagement = () => {
-  const navigate = useNavigate();
+  // Vista actual: 'list' | 'form' | 'assignments'
+  const [currentView, setCurrentView] = useState('list');
 
-  // Estados para el usuario
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isCreatingUser, setIsCreatingUser] = useState(false);
-  const [userError, setUserError] = useState('');
-  const [userSuccess, setUserSuccess] = useState('');
+  // Estados para el listado de usuarios
+  const [users, setUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const [filters, setFilters] = useState({
+    username: '',
+    email: '',
+    rol_global: '',
+    activo: ''
+  });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 10,
+    totalItems: 0
+  });
+
+  // Estados para el formulario de usuario
+  const [editingUser, setEditingUser] = useState(null);
+  const [isSavingUser, setIsSavingUser] = useState(false);
 
   // Estados para las asignaciones
+  const [currentUser, setCurrentUser] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
   const [isSavingAssignment, setIsSavingAssignment] = useState(false);
-  const [assignmentError, setAssignmentError] = useState('');
-  const [assignmentSuccess, setAssignmentSuccess] = useState('');
   const [editingAssignment, setEditingAssignment] = useState(null);
 
-  // Paso actual del flujo
-  const [currentStep, setCurrentStep] = useState('user'); // 'user' | 'assignments'
+  // Mensajes globales
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  /**
+   * Cargar roles disponibles
+   */
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const result = await getRoles();
+      if (result.success) {
+        setRoles(result.data);
+      }
+    };
+    fetchRoles();
+  }, []);
+
+  /**
+   * Cargar usuarios con filtros y paginación
+   */
+  const loadUsers = useCallback(async () => {
+    setIsLoadingUsers(true);
+    setErrorMessage('');
+
+    const params = {
+      page: pagination.currentPage,
+      limit: pagination.itemsPerPage,
+      ...Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '')
+      )
+    };
+
+    const result = await getUsers(params);
+
+    if (result.success) {
+      setUsers(result.data.items || result.data);
+      setPagination(prev => ({
+        ...prev,
+        totalItems: result.data.total || result.data.length
+      }));
+    } else {
+      setErrorMessage('Error al cargar usuarios');
+    }
+
+    setIsLoadingUsers(false);
+  }, [filters, pagination.currentPage, pagination.itemsPerPage]);
+
+  /**
+   * Cargar usuarios al montar y cuando cambien filtros/paginación
+   */
+  useEffect(() => {
+    if (currentView === 'list') {
+      loadUsers();
+    }
+  }, [currentView, loadUsers]);
+
+  /**
+   * Manejar cambio de filtros
+   */
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  /**
+   * Limpiar filtros
+   */
+  const handleClearFilters = () => {
+    setFilters({
+      username: '',
+      email: '',
+      rol_global: '',
+      activo: ''
+    });
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  /**
+   * Cambiar página
+   */
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, currentPage: newPage }));
+  };
+
+  /**
+   * Cambiar items por página
+   */
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setPagination(prev => ({
+      ...prev,
+      itemsPerPage: newItemsPerPage,
+      currentPage: 1
+    }));
+  };
 
   /**
    * Crear nuevo usuario
    */
-  const handleCreateUser = async (userData, setFieldErrors) => {
-    setIsCreatingUser(true);
-    setUserError('');
-    setUserSuccess('');
+  const handleCreateUser = () => {
+    setEditingUser(null);
+    setCurrentView('form');
+    setSuccessMessage('');
+    setErrorMessage('');
+  };
 
-    const result = await createUser(userData);
+  /**
+   * Editar usuario
+   */
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setCurrentView('form');
+    setSuccessMessage('');
+    setErrorMessage('');
+  };
+
+  /**
+   * Guardar usuario (crear o actualizar)
+   */
+  const handleSaveUser = async (userData, setFieldErrors) => {
+    setIsSavingUser(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    let result;
+    if (editingUser) {
+      result = await updateUser(editingUser.id, userData);
+    } else {
+      result = await createUser(userData);
+    }
 
     if (result.success) {
-      setUserSuccess('Usuario creado exitosamente');
-      setCurrentUser(result.data);
+      setSuccessMessage(
+        editingUser
+          ? 'Usuario actualizado exitosamente'
+          : 'Usuario creado exitosamente'
+      );
 
-      // Si el usuario tiene rol global, ir directo al paso de asignaciones (aunque no pueda crear ninguna)
-      // Si no tiene rol global, ir al paso de asignaciones
-      setCurrentStep('assignments');
+      // Recargar lista de usuarios
+      await loadUsers();
 
-      // Cargar asignaciones vacías inicialmente
-      setAssignments([]);
-
-      // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => setUserSuccess(''), 3000);
+      // Volver al listado después de 2 segundos
+      setTimeout(() => {
+        setCurrentView('list');
+        setEditingUser(null);
+        setSuccessMessage('');
+      }, 2000);
     } else {
-      // Procesar errores de validación
       const { fieldErrors, generalError } = processValidationErrors(
         result.error,
         result.status
@@ -92,11 +230,61 @@ const UserBusinessManagement = () => {
       }
 
       if (generalError) {
-        setUserError(generalError);
+        setErrorMessage(generalError);
       }
     }
 
-    setIsCreatingUser(false);
+    setIsSavingUser(false);
+  };
+
+  /**
+   * Activar/Desactivar usuario
+   */
+  const handleToggleUserStatus = async (user) => {
+    const confirmMessage = user.activo
+      ? '¿Está seguro de desactivar este usuario? Perderá acceso al sistema.'
+      : '¿Está seguro de activar este usuario? Recuperará acceso al sistema.';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setErrorMessage('');
+
+    const result = user.activo
+      ? await deactivateUser(user.id)
+      : await activateUser(user.id);
+
+    if (result.success) {
+      setSuccessMessage(
+        user.activo
+          ? 'Usuario desactivado exitosamente'
+          : 'Usuario activado exitosamente'
+      );
+
+      // Recargar lista de usuarios
+      await loadUsers();
+
+      // Limpiar mensaje después de 3 segundos
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } else {
+      setErrorMessage(
+        user.activo
+          ? 'Error al desactivar el usuario'
+          : 'Error al activar el usuario'
+      );
+    }
+  };
+
+  /**
+   * Gestionar asignaciones de usuario
+   */
+  const handleManageAssignments = async (user) => {
+    setCurrentUser(user);
+    setCurrentView('assignments');
+    setSuccessMessage('');
+    setErrorMessage('');
+    await loadAssignments(user.id);
   };
 
   /**
@@ -104,14 +292,14 @@ const UserBusinessManagement = () => {
    */
   const loadAssignments = useCallback(async (userId) => {
     setIsLoadingAssignments(true);
-    setAssignmentError('');
+    setErrorMessage('');
 
     const result = await getUserAssignments(userId);
 
     if (result.success) {
       setAssignments(result.data);
     } else {
-      setAssignmentError('Error al cargar las asignaciones del usuario');
+      setErrorMessage('Error al cargar las asignaciones del usuario');
     }
 
     setIsLoadingAssignments(false);
@@ -122,25 +310,23 @@ const UserBusinessManagement = () => {
    */
   const handleSaveAssignment = async (assignmentData, setFieldErrors) => {
     setIsSavingAssignment(true);
-    setAssignmentError('');
-    setAssignmentSuccess('');
+    setErrorMessage('');
+    setSuccessMessage('');
 
     let result;
 
     if (editingAssignment) {
-      // Actualizar asignación existente
       const updateData = {
         rol_id: assignmentData.rol_id,
         es_principal: assignmentData.es_principal
       };
       result = await updateBusinessAssignment(editingAssignment.id, updateData);
     } else {
-      // Crear nueva asignación
       result = await createBusinessAssignment(assignmentData);
     }
 
     if (result.success) {
-      setAssignmentSuccess(
+      setSuccessMessage(
         editingAssignment
           ? 'Asignación actualizada exitosamente'
           : 'Asignación creada exitosamente'
@@ -153,9 +339,8 @@ const UserBusinessManagement = () => {
       setEditingAssignment(null);
 
       // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => setAssignmentSuccess(''), 3000);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } else {
-      // Procesar errores de validación
       const { fieldErrors, generalError } = processValidationErrors(
         result.error,
         result.status
@@ -166,7 +351,7 @@ const UserBusinessManagement = () => {
       }
 
       if (generalError) {
-        setAssignmentError(generalError);
+        setErrorMessage(generalError);
       }
     }
 
@@ -178,16 +363,16 @@ const UserBusinessManagement = () => {
    */
   const handleEditAssignment = (assignment) => {
     setEditingAssignment(assignment);
-    setAssignmentError('');
-    setAssignmentSuccess('');
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
   /**
-   * Cancelar edición
+   * Cancelar edición de asignación
    */
-  const handleCancelEdit = () => {
+  const handleCancelEditAssignment = () => {
     setEditingAssignment(null);
-    setAssignmentError('');
+    setErrorMessage('');
   };
 
   /**
@@ -202,15 +387,15 @@ const UserBusinessManagement = () => {
       return;
     }
 
-    setAssignmentError('');
-    setAssignmentSuccess('');
+    setErrorMessage('');
+    setSuccessMessage('');
 
     const result = assignment.activo
       ? await deactivateBusinessAssignment(assignment.id)
       : await activateBusinessAssignment(assignment.id);
 
     if (result.success) {
-      setAssignmentSuccess(
+      setSuccessMessage(
         assignment.activo
           ? 'Asignación desactivada exitosamente'
           : 'Asignación activada exitosamente'
@@ -220,9 +405,9 @@ const UserBusinessManagement = () => {
       await loadAssignments(currentUser.id);
 
       // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => setAssignmentSuccess(''), 3000);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } else {
-      setAssignmentError(
+      setErrorMessage(
         assignment.activo
           ? 'Error al desactivar la asignación'
           : 'Error al activar la asignación'
@@ -231,108 +416,116 @@ const UserBusinessManagement = () => {
   };
 
   /**
-   * Volver al paso anterior
+   * Volver al listado
    */
-  const handleBackToUser = () => {
-    setCurrentStep('user');
+  const handleBackToList = () => {
+    setCurrentView('list');
+    setEditingUser(null);
     setCurrentUser(null);
     setAssignments([]);
     setEditingAssignment(null);
-    setAssignmentError('');
-    setAssignmentSuccess('');
+    setSuccessMessage('');
+    setErrorMessage('');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-800 mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Volver
-          </button>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">
-                Gestión de Usuarios y Negocios
-              </h1>
-              <p className="text-slate-600 mt-1">
-                Crear usuarios y asignarlos a negocios con roles específicos
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Indicador de pasos */}
-        <div className="mb-8">
-          <div className="flex items-center justify-center gap-4">
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-              ${currentStep === 'user' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'}`}
+          {currentView !== 'list' && (
+            <button
+              onClick={handleBackToList}
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-800 mb-4 transition-colors"
             >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold
-                ${currentStep === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-400 text-white'}`}
-              >
-                1
-              </div>
-              <span className="font-medium">Crear Usuario</span>
-            </div>
-
-            <div className="w-12 h-0.5 bg-slate-300" />
-
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-              ${currentStep === 'assignments' ? 'bg-blue-100 text-blue-700' : 'bg-slate-200 text-slate-600'}`}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold
-                ${currentStep === 'assignments' ? 'bg-blue-600 text-white' : 'bg-slate-400 text-white'}`}
-              >
-                2
-              </div>
-              <span className="font-medium">Asignar Negocios</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenido principal */}
-        <div className="space-y-6">
-          {/* Paso 1: Crear Usuario */}
-          {currentStep === 'user' && (
-            <>
-              {userError && (
-                <ErrorAlert message={userError} onClose={() => setUserError('')} />
-              )}
-
-              {userSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-green-900">{userSuccess}</h4>
-                    <p className="text-green-700 text-sm mt-1">
-                      Ahora puede asignar el usuario a negocios
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <UserForm
-                onSubmit={handleCreateUser}
-                isLoading={isCreatingUser}
-              />
-            </>
+              <ArrowLeft className="w-5 h-5" />
+              Volver al listado
+            </button>
           )}
 
-          {/* Paso 2: Asignar Negocios */}
-          {currentStep === 'assignments' && currentUser && (
-            <>
-              {/* Información del usuario creado */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Users className="w-8 h-8 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800">
+                  Gestión de Usuarios
+                </h1>
+                <p className="text-slate-600 mt-1">
+                  {currentView === 'list' && 'Administrar usuarios y sus asignaciones a negocios'}
+                  {currentView === 'form' && (editingUser ? 'Editar usuario' : 'Crear nuevo usuario')}
+                  {currentView === 'assignments' && 'Gestionar asignaciones a negocios'}
+                </p>
+              </div>
+            </div>
+
+            {currentView === 'list' && (
+              <button
+                onClick={handleCreateUser}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg
+                  hover:bg-blue-700 transition-colors font-medium shadow-sm"
+              >
+                <Plus className="w-5 h-5" />
+                Nuevo Usuario
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Mensajes globales */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+            <p className="font-semibold text-green-900">{successMessage}</p>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-6">
+            <ErrorAlert message={errorMessage} onClose={() => setErrorMessage('')} />
+          </div>
+        )}
+
+        {/* Contenido según vista actual */}
+        <div>
+          {/* Vista de listado */}
+          {currentView === 'list' && (
+            <UserList
+              users={users}
+              isLoading={isLoadingUsers}
+              onEdit={handleEditUser}
+              onToggleStatus={handleToggleUserStatus}
+              onManageAssignments={handleManageAssignments}
+              roles={roles}
+              currentPage={pagination.currentPage}
+              itemsPerPage={pagination.itemsPerPage}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+            />
+          )}
+
+          {/* Vista de formulario de usuario */}
+          {currentView === 'form' && (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <UserForm
+                onSubmit={handleSaveUser}
+                initialData={editingUser}
+                isLoading={isSavingUser}
+              />
+            </div>
+          )}
+
+          {/* Vista de asignaciones */}
+          {currentView === 'assignments' && currentUser && (
+            <div className="space-y-6">
+              {/* Información del usuario */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                <h3 className="font-semibold text-blue-900 mb-2">Usuario creado:</h3>
+                <h3 className="font-semibold text-blue-900 mb-3">Usuario:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-blue-700 font-medium">Username</p>
@@ -353,18 +546,6 @@ const UserBusinessManagement = () => {
                 </div>
               </div>
 
-              {/* Mensajes de éxito/error */}
-              {assignmentError && (
-                <ErrorAlert message={assignmentError} onClose={() => setAssignmentError('')} />
-              )}
-
-              {assignmentSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                  <p className="font-semibold text-green-900">{assignmentSuccess}</p>
-                </div>
-              )}
-
               {/* Formulario de asignación */}
               <BusinessAssignmentForm
                 userId={currentUser.id}
@@ -373,7 +554,7 @@ const UserBusinessManagement = () => {
                 onSubmit={handleSaveAssignment}
                 isLoading={isSavingAssignment}
                 editingAssignment={editingAssignment}
-                onCancelEdit={handleCancelEdit}
+                onCancelEdit={handleCancelEditAssignment}
               />
 
               {/* Lista de asignaciones */}
@@ -383,19 +564,7 @@ const UserBusinessManagement = () => {
                 onEdit={handleEditAssignment}
                 onToggleStatus={handleToggleAssignmentStatus}
               />
-
-              {/* Botón para crear otro usuario */}
-              <div className="flex justify-center pt-4">
-                <button
-                  onClick={handleBackToUser}
-                  className="px-6 py-3 bg-slate-600 text-white rounded-lg hover:bg-slate-700
-                    transition-colors flex items-center gap-2 font-medium"
-                >
-                  <Users className="w-5 h-5" />
-                  Crear Otro Usuario
-                </button>
-              </div>
-            </>
+            </div>
           )}
         </div>
       </div>

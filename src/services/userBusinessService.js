@@ -78,6 +78,42 @@ export const updateUser = async (userId, userData) => {
 };
 
 /**
+ * Desactivar un usuario
+ * @param {number} userId - ID del usuario
+ * @returns {Promise} Resultado de la operación
+ */
+export const deactivateUser = async (userId) => {
+  try {
+    const response = await api.patch(`/usuarios/${userId}/desactivar`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Activar un usuario
+ * @param {number} userId - ID del usuario
+ * @returns {Promise} Resultado de la operación
+ */
+export const activateUser = async (userId) => {
+  try {
+    const response = await api.patch(`/usuarios/${userId}/activar`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
  * Obtener lista de negocios disponibles
  * @returns {Promise} Lista de negocios
  */
