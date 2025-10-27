@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus } from 'lucide-react';
 import UserList from '../components/users/UserList';
-import UserForm from '../components/users/UserForm';
+import UserFormModal from '../components/users/UserFormModal';
 import BusinessAssignmentForm from '../components/users/BusinessAssignmentForm';
 import BusinessAssignmentList from '../components/users/BusinessAssignmentList';
 import {
@@ -43,7 +43,7 @@ const ErrorAlert = ({ message, onClose }) => (
  * Página para gestión de usuarios y asignaciones a negocios
  */
 const UserBusinessManagement = () => {
-  // Vista actual: 'list' | 'form' | 'assignments'
+  // Vista actual: 'list' | 'assignments'
   const [currentView, setCurrentView] = useState('list');
 
   // Estados para el listado de usuarios
@@ -62,7 +62,8 @@ const UserBusinessManagement = () => {
     totalItems: 0
   });
 
-  // Estados para el formulario de usuario
+  // Estados para el modal de formulario de usuario
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isSavingUser, setIsSavingUser] = useState(false);
 
@@ -173,7 +174,7 @@ const UserBusinessManagement = () => {
    */
   const handleCreateUser = () => {
     setEditingUser(null);
-    setCurrentView('form');
+    setIsUserModalOpen(true);
     setSuccessMessage('');
     setErrorMessage('');
   };
@@ -183,8 +184,17 @@ const UserBusinessManagement = () => {
    */
   const handleEditUser = (user) => {
     setEditingUser(user);
-    setCurrentView('form');
+    setIsUserModalOpen(true);
     setSuccessMessage('');
+    setErrorMessage('');
+  };
+
+  /**
+   * Cerrar modal de usuario
+   */
+  const handleCloseUserModal = () => {
+    setIsUserModalOpen(false);
+    setEditingUser(null);
     setErrorMessage('');
   };
 
@@ -213,12 +223,14 @@ const UserBusinessManagement = () => {
       // Recargar lista de usuarios
       await loadUsers();
 
-      // Volver al listado después de 2 segundos
+      // Cerrar modal
+      setIsUserModalOpen(false);
+      setEditingUser(null);
+
+      // Limpiar mensaje después de 3 segundos
       setTimeout(() => {
-        setCurrentView('list');
-        setEditingUser(null);
         setSuccessMessage('');
-      }, 2000);
+      }, 3000);
     } else {
       const { fieldErrors, generalError } = processValidationErrors(
         result.error,
@@ -416,11 +428,10 @@ const UserBusinessManagement = () => {
   };
 
   /**
-   * Volver al listado
+   * Volver al listado desde asignaciones
    */
   const handleBackToList = () => {
     setCurrentView('list');
-    setEditingUser(null);
     setCurrentUser(null);
     setAssignments([]);
     setEditingAssignment(null);
@@ -433,7 +444,7 @@ const UserBusinessManagement = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          {currentView !== 'list' && (
+          {currentView === 'assignments' && (
             <button
               onClick={handleBackToList}
               className="flex items-center gap-2 text-slate-600 hover:text-slate-800 mb-4 transition-colors"
@@ -454,7 +465,6 @@ const UserBusinessManagement = () => {
                 </h1>
                 <p className="text-slate-600 mt-1">
                   {currentView === 'list' && 'Administrar usuarios y sus asignaciones a negocios'}
-                  {currentView === 'form' && (editingUser ? 'Editar usuario' : 'Crear nuevo usuario')}
                   {currentView === 'assignments' && 'Gestionar asignaciones a negocios'}
                 </p>
               </div>
@@ -509,17 +519,6 @@ const UserBusinessManagement = () => {
             />
           )}
 
-          {/* Vista de formulario de usuario */}
-          {currentView === 'form' && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <UserForm
-                onSubmit={handleSaveUser}
-                initialData={editingUser}
-                isLoading={isSavingUser}
-              />
-            </div>
-          )}
-
           {/* Vista de asignaciones */}
           {currentView === 'assignments' && currentUser && (
             <div className="space-y-6">
@@ -567,6 +566,15 @@ const UserBusinessManagement = () => {
             </div>
           )}
         </div>
+
+        {/* Modal de formulario de usuario */}
+        <UserFormModal
+          isOpen={isUserModalOpen}
+          onClose={handleCloseUserModal}
+          onSubmit={handleSaveUser}
+          initialData={editingUser}
+          isLoading={isSavingUser}
+        />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   User,
   Building2,
@@ -18,8 +18,6 @@ import { TablePagination } from '../common/TablePagination';
  * Componente de filtros para el listado de usuarios
  */
 const UserFilters = ({ filters, onFilterChange, onClearFilters, roles }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const handleChange = (field, value) => {
     onFilterChange({ ...filters, [field]: value });
   };
@@ -28,108 +26,98 @@ const UserFilters = ({ filters, onFilterChange, onClearFilters, roles }) => {
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-slate-600" />
-          <h3 className="font-semibold text-slate-800">Filtros de Búsqueda</h3>
-          {hasActiveFilters && (
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-              Activos
-            </span>
-          )}
-        </div>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-        >
-          {isExpanded ? 'Ocultar' : 'Mostrar'} filtros
-        </button>
+      <div className="flex items-center gap-2 mb-4">
+        <Filter className="w-5 h-5 text-slate-600" />
+        <h3 className="font-semibold text-slate-800">Filtros de Búsqueda</h3>
+        {hasActiveFilters && (
+          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+            Filtros activos
+          </span>
+        )}
       </div>
 
-      {isExpanded && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Búsqueda por username */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Nombre de usuario
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={filters.username}
-                  onChange={(e) => handleChange('username', e.target.value)}
-                  placeholder="Buscar..."
-                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Búsqueda por email */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Email
-              </label>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Búsqueda por username */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Nombre de usuario
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                value={filters.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="email@ejemplo.com"
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={filters.username}
+                onChange={(e) => handleChange('username', e.target.value)}
+                placeholder="Buscar..."
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-
-            {/* Filtro por rol */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Rol Global
-              </label>
-              <select
-                value={filters.rol_global}
-                onChange={(e) => handleChange('rol_global', e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Todos</option>
-                {roles.map(rol => (
-                  <option key={rol.id} value={rol.nombre}>
-                    {rol.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Filtro por estado */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Estado
-              </label>
-              <select
-                value={filters.activo}
-                onChange={(e) => handleChange('activo', e.target.value)}
-                className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Todos</option>
-                <option value="true">Activo</option>
-                <option value="false">Inactivo</option>
-              </select>
             </div>
           </div>
 
-          {/* Botón limpiar filtros */}
-          {hasActiveFilters && (
-            <div className="flex justify-end">
-              <button
-                onClick={onClearFilters}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Limpiar filtros
-              </button>
-            </div>
-          )}
+          {/* Búsqueda por email */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Email
+            </label>
+            <input
+              type="text"
+              value={filters.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              placeholder="email@ejemplo.com"
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Filtro por rol */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Rol Global
+            </label>
+            <select
+              value={filters.rol_global}
+              onChange={(e) => handleChange('rol_global', e.target.value)}
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos</option>
+              {roles.map(rol => (
+                <option key={rol.id} value={rol.nombre}>
+                  {rol.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filtro por estado */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Estado
+            </label>
+            <select
+              value={filters.activo}
+              onChange={(e) => handleChange('activo', e.target.value)}
+              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos</option>
+              <option value="true">Activo</option>
+              <option value="false">Inactivo</option>
+            </select>
+          </div>
         </div>
-      )}
+
+        {/* Botón limpiar filtros */}
+        {hasActiveFilters && (
+          <div className="flex justify-end">
+            <button
+              onClick={onClearFilters}
+              className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4" />
+              Limpiar filtros
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -174,17 +162,13 @@ const UserList = ({
       />
 
       {/* Contador de resultados */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600">
-          {totalItems > 0 ? (
-            <>
-              Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} usuarios
-            </>
-          ) : (
-            'No se encontraron usuarios'
-          )}
-        </p>
-      </div>
+      {totalItems > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-slate-600">
+            Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} usuarios
+          </p>
+        </div>
+      )}
 
       {/* Lista de usuarios */}
       {users.length === 0 ? (
