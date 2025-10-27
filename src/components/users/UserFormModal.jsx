@@ -46,6 +46,7 @@ const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoadin
               onSubmit={handleSubmit}
               initialData={initialData}
               isLoading={isLoading}
+              showPanel={false}
             />
           </div>
         </div>

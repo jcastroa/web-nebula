@@ -7,7 +7,6 @@ import {
   Edit2,
   ToggleLeft,
   ToggleRight,
-  Search,
   Filter,
   X
 } from 'lucide-react';
@@ -15,108 +14,55 @@ import { LoadingSpinner } from '../common/LoadingSpinner';
 import { TablePagination } from '../common/TablePagination';
 
 /**
- * Componente de filtros para el listado de usuarios
+ * Componente de badges de filtros activos
  */
-const UserFilters = ({ filters, onFilterChange, onClearFilters, roles }) => {
-  const handleChange = (field, value) => {
-    onFilterChange({ ...filters, [field]: value });
+const ActiveFilterBadges = ({ filters, onRemoveFilter, onClearAll, roles }) => {
+  const getFilterLabel = (key, value) => {
+    switch (key) {
+      case 'username':
+        return `Usuario: ${value}`;
+      case 'email':
+        return `Email: ${value}`;
+      case 'rol_global':
+        return `Rol: ${value}`;
+      case 'activo':
+        return value === 'true' ? 'Estado: Activo' : 'Estado: Inactivo';
+      default:
+        return value;
+    }
   };
 
-  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+  const activeFilters = Object.entries(filters).filter(([_, value]) => value !== '');
+
+  if (activeFilters.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 mb-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="w-5 h-5 text-slate-600" />
-        <h3 className="font-semibold text-slate-800">Filtros de Búsqueda</h3>
-        {hasActiveFilters && (
-          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-            Filtros activos
-          </span>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Búsqueda por username */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Nombre de usuario
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                value={filters.username}
-                onChange={(e) => handleChange('username', e.target.value)}
-                placeholder="Buscar..."
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Búsqueda por email */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Email
-            </label>
-            <input
-              type="text"
-              value={filters.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="email@ejemplo.com"
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Filtro por rol */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Rol Global
-            </label>
-            <select
-              value={filters.rol_global}
-              onChange={(e) => handleChange('rol_global', e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-blue-900">Filtros aplicados:</span>
+          {activeFilters.map(([key, value]) => (
+            <span
+              key={key}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg"
             >
-              <option value="">Todos</option>
-              {roles.map(rol => (
-                <option key={rol.id} value={rol.nombre}>
-                  {rol.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Filtro por estado */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Estado
-            </label>
-            <select
-              value={filters.activo}
-              onChange={(e) => handleChange('activo', e.target.value)}
-              className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos</option>
-              <option value="true">Activo</option>
-              <option value="false">Inactivo</option>
-            </select>
-          </div>
+              {getFilterLabel(key, value)}
+              <button
+                onClick={() => onRemoveFilter(key)}
+                className="hover:bg-blue-700 rounded-full p-0.5 transition-colors"
+                title="Quitar filtro"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </span>
+          ))}
         </div>
-
-        {/* Botón limpiar filtros */}
-        {hasActiveFilters && (
-          <div className="flex justify-end">
-            <button
-              onClick={onClearFilters}
-              className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
-              Limpiar filtros
-            </button>
-          </div>
-        )}
+        <button
+          onClick={onClearAll}
+          className="text-sm font-medium text-blue-700 hover:text-blue-800 hover:underline"
+        >
+          Limpiar todos
+        </button>
       </div>
     </div>
   );
@@ -141,7 +87,9 @@ const UserList = ({
   // Filtros
   filters = { username: '', email: '', rol_global: '', activo: '' },
   onFilterChange,
-  onClearFilters
+  onClearFilters,
+  onOpenFilters,
+  onRemoveFilter
 }) => {
   if (isLoading) {
     return (
@@ -153,11 +101,23 @@ const UserList = ({
 
   return (
     <div className="space-y-6">
-      {/* Filtros */}
-      <UserFilters
+      {/* Botón de filtros */}
+      <div className="flex justify-end">
+        <button
+          onClick={onOpenFilters}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200
+            text-slate-700 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
+        >
+          <Filter className="w-4 h-4" />
+          Filtros
+        </button>
+      </div>
+
+      {/* Badges de filtros activos */}
+      <ActiveFilterBadges
         filters={filters}
-        onFilterChange={onFilterChange}
-        onClearFilters={onClearFilters}
+        onRemoveFilter={onRemoveFilter}
+        onClearAll={onClearFilters}
         roles={roles}
       />
 

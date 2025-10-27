@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus } from 'lucide-react';
 import UserList from '../components/users/UserList';
 import UserFormModal from '../components/users/UserFormModal';
+import FiltersModal from '../components/users/FiltersModal';
 import BusinessAssignmentForm from '../components/users/BusinessAssignmentForm';
 import BusinessAssignmentList from '../components/users/BusinessAssignmentList';
 import {
@@ -66,6 +67,9 @@ const UserBusinessManagement = () => {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isSavingUser, setIsSavingUser] = useState(false);
+
+  // Estados para el modal de filtros
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
 
   // Estados para las asignaciones
   const [currentUser, setCurrentUser] = useState(null);
@@ -148,6 +152,39 @@ const UserBusinessManagement = () => {
       rol_global: '',
       activo: ''
     });
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  /**
+   * Abrir modal de filtros
+   */
+  const handleOpenFilters = () => {
+    setIsFiltersModalOpen(true);
+  };
+
+  /**
+   * Cerrar modal de filtros
+   */
+  const handleCloseFilters = () => {
+    setIsFiltersModalOpen(false);
+  };
+
+  /**
+   * Aplicar filtros desde el modal
+   */
+  const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  /**
+   * Remover un filtro individual
+   */
+  const handleRemoveFilter = (filterKey) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterKey]: ''
+    }));
     setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
@@ -516,6 +553,8 @@ const UserBusinessManagement = () => {
               filters={filters}
               onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
+              onOpenFilters={handleOpenFilters}
+              onRemoveFilter={handleRemoveFilter}
             />
           )}
 
@@ -574,6 +613,15 @@ const UserBusinessManagement = () => {
           onSubmit={handleSaveUser}
           initialData={editingUser}
           isLoading={isSavingUser}
+        />
+
+        {/* Modal de filtros */}
+        <FiltersModal
+          isOpen={isFiltersModalOpen}
+          onClose={handleCloseFilters}
+          onApplyFilters={handleApplyFilters}
+          initialFilters={filters}
+          roles={roles}
         />
       </div>
     </div>

@@ -6,7 +6,7 @@ import { getRoles } from '../../services/userBusinessService';
 /**
  * Formulario para crear/editar usuarios
  */
-const UserForm = ({ onSubmit, initialData = null, isLoading = false }) => {
+const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel = true }) => {
   const [formData, setFormData] = useState({
     username: '',
     nombres: '',
@@ -110,15 +110,16 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false }) => {
     );
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+  const formContent = (
+    <>
+      {showPanel && (
         <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
           <User className="w-5 h-5 text-blue-600" />
           Datos del Usuario
         </h3>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Username */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -243,7 +244,7 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false }) => {
             )}
           </div>
         </div>
-      </div>
+      {/* Fin del grid */}
 
       {/* Botón de envío */}
       <div className="flex justify-end gap-3">
@@ -267,6 +268,18 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false }) => {
           )}
         </button>
       </div>
+    </>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {showPanel ? (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          {formContent}
+        </div>
+      ) : (
+        formContent
+      )}
     </form>
   );
 };
