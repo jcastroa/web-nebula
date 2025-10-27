@@ -11,7 +11,7 @@ import api from './api';
  */
 export const createUser = async (userData) => {
   try {
-    const response = await api.post('/usuarios', userData);
+    const response = await api.post('/usuarios/', userData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -29,7 +29,7 @@ export const createUser = async (userData) => {
  */
 export const getUsers = async (params = {}) => {
   try {
-    const response = await api.get('/usuarios', { params });
+    const response = await api.get('/usuarios/', { params });
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -119,7 +119,7 @@ export const activateUser = async (userId) => {
  */
 export const getBusinesses = async () => {
   try {
-    const response = await api.get('/negocios');
+    const response = await api.get('/negocios/');
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -136,7 +136,7 @@ export const getBusinesses = async () => {
  */
 export const getRoles = async () => {
   try {
-    const response = await api.get('/roles');
+    const response = await api.get('/roles/');
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -154,7 +154,7 @@ export const getRoles = async () => {
  */
 export const createBusinessAssignment = async (assignmentData) => {
   try {
-    const response = await api.post('/usuarios/asignaciones', assignmentData);
+    const response = await api.post('/usuarios/asignaciones/', assignmentData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -172,7 +172,7 @@ export const createBusinessAssignment = async (assignmentData) => {
  */
 export const getUserAssignments = async (userId) => {
   try {
-    const response = await api.get(`/usuarios/${userId}/asignaciones`);
+    const response = await api.get(`/usuarios/${userId}/asignaciones/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
