@@ -86,9 +86,7 @@ const UserList = ({
   onItemsPerPageChange,
   // Filtros
   filters = { username: '', email: '', rol_global: '', activo: '' },
-  onFilterChange,
   onClearFilters,
-  onOpenFilters,
   onRemoveFilter
 }) => {
   if (isLoading) {
@@ -101,18 +99,6 @@ const UserList = ({
 
   return (
     <div className="space-y-6">
-      {/* Botón de filtros */}
-      <div className="flex justify-end">
-        <button
-          onClick={onOpenFilters}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200
-            text-slate-700 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
-        >
-          <Filter className="w-4 h-4" />
-          Filtros
-        </button>
-      </div>
-
       {/* Badges de filtros activos */}
       <ActiveFilterBadges
         filters={filters}

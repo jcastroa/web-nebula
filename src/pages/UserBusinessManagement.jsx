@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus } from 'lucide-react';
+import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus, Filter } from 'lucide-react';
 import UserList from '../components/users/UserList';
 import UserFormModal from '../components/users/UserFormModal';
 import FiltersModal from '../components/users/FiltersModal';
@@ -133,14 +133,6 @@ const UserBusinessManagement = () => {
       loadUsers();
     }
   }, [currentView, loadUsers]);
-
-  /**
-   * Manejar cambio de filtros
-   */
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
-  };
 
   /**
    * Limpiar filtros
@@ -508,14 +500,24 @@ const UserBusinessManagement = () => {
             </div>
 
             {currentView === 'list' && (
-              <button
-                onClick={handleCreateUser}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg
-                  hover:bg-blue-700 transition-colors font-medium shadow-sm"
-              >
-                <Plus className="w-5 h-5" />
-                Nuevo Usuario
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleOpenFilters}
+                  className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-300
+                    text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium shadow-sm"
+                >
+                  <Filter className="w-5 h-5" />
+                  Filtros
+                </button>
+                <button
+                  onClick={handleCreateUser}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg
+                    hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                >
+                  <Plus className="w-5 h-5" />
+                  Nuevo Usuario
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -551,9 +553,7 @@ const UserBusinessManagement = () => {
               onPageChange={handlePageChange}
               onItemsPerPageChange={handleItemsPerPageChange}
               filters={filters}
-              onFilterChange={handleFilterChange}
               onClearFilters={handleClearFilters}
-              onOpenFilters={handleOpenFilters}
               onRemoveFilter={handleRemoveFilter}
             />
           )}
