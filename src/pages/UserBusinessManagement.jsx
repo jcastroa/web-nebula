@@ -503,18 +503,18 @@ const UserBusinessManagement = () => {
               <div className="flex gap-3">
                 <button
                   onClick={handleOpenFilters}
-                  className="flex items-center gap-2 px-4 py-3 bg-white border border-slate-300
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300
                     text-slate-700 hover:bg-slate-50 rounded-lg transition-colors font-medium shadow-sm"
                 >
-                  <Filter className="w-5 h-5" />
+                  <Filter className="w-4 h-4" />
                   Filtros
                 </button>
                 <button
                   onClick={handleCreateUser}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg
                     hover:bg-blue-700 transition-colors font-medium shadow-sm"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4" />
                   Nuevo Usuario
                 </button>
               </div>
