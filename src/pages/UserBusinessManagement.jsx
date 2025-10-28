@@ -241,7 +241,7 @@ const UserBusinessManagement = () => {
   /**
    * Guardar usuario (crear o actualizar)
    */
-  const handleSaveUser = async (userData, setFieldErrors) => {
+  const handleSaveUser = async (userData, setFieldErrors, setGeneralError) => {
     setIsSavingUser(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -282,8 +282,11 @@ const UserBusinessManagement = () => {
       }
 
       if (generalError) {
-        setErrorMessage(generalError);
+        // Mostrar error dentro del modal, no en la página principal
+        setGeneralError(generalError);
       }
+
+      // NO cerrar el modal cuando hay errores
     }
 
     setIsSavingUser(false);

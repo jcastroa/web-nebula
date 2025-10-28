@@ -1,15 +1,23 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, AlertTriangle } from 'lucide-react';
 import UserForm from './UserForm';
 
 /**
  * Modal para crear/editar usuarios
  */
 const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = false }) => {
+  const [generalError, setGeneralError] = useState('');
+
   if (!isOpen) return null;
 
   const handleSubmit = (userData, setFieldErrors) => {
-    onSubmit(userData, setFieldErrors);
+    setGeneralError(''); // Limpiar error previo
+    onSubmit(userData, setFieldErrors, setGeneralError);
+  };
+
+  const handleClose = () => {
+    setGeneralError(''); // Limpiar error al cerrar
+    onClose();
   };
 
   return (
@@ -17,7 +25,7 @@ const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoadin
       {/* Overlay */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Modal */}
@@ -27,12 +35,12 @@ const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoadin
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-xl">
+          <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-xl z-10">
             <h2 className="text-xl font-bold text-slate-800">
               {initialData ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
             </h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
               disabled={isLoading}
             >
@@ -42,6 +50,22 @@ const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoadin
 
           {/* Content */}
           <div className="p-6">
+            {/* Error general dentro del modal */}
+            {generalError && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-red-900">{generalError}</p>
+                </div>
+                <button
+                  onClick={() => setGeneralError('')}
+                  className="text-red-600 hover:text-red-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
             <UserForm
               onSubmit={handleSubmit}
               initialData={initialData}
