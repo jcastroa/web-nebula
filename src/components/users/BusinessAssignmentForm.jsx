@@ -51,7 +51,7 @@ const BusinessAssignmentForm = ({
   useEffect(() => {
     if (editingAssignment) {
       setFormData({
-        negocio_id: editingAssignment.negocio_id || '',
+        negocio_id: editingAssignment.consultorio_id || '',
         rol_id: editingAssignment.rol_id || '',
         es_principal: editingAssignment.es_principal || false
       });
@@ -85,11 +85,11 @@ const BusinessAssignmentForm = ({
         assignment =>
           assignment.es_principal &&
           (!editingAssignment || assignment.id !== editingAssignment.id) &&
-          assignment.activo !== false
+          assignment.estado === 'activo'
       );
 
       if (hasPrincipal) {
-        setValidationWarning('Ya existe un negocio marcado como principal. Al guardar, este será el nuevo negocio principal.');
+        setValidationWarning('Ya existe un consultorio marcado como principal. Al guardar, este será el nuevo consultorio principal.');
       } else {
         setValidationWarning('');
       }
@@ -116,16 +116,16 @@ const BusinessAssignmentForm = ({
       errors.rol_id = 'Debe seleccionar un rol';
     }
 
-    // Validar que el negocio no esté ya asignado (excepto si es edición)
+    // Validar que el consultorio no esté ya asignado (excepto si es edición)
     if (!editingAssignment) {
       const businessAlreadyAssigned = currentAssignments.some(
         assignment =>
-          assignment.negocio_id === parseInt(formData.negocio_id) &&
-          assignment.activo !== false
+          assignment.consultorio_id === parseInt(formData.negocio_id) &&
+          assignment.estado === 'activo'
       );
 
       if (businessAlreadyAssigned) {
-        errors.negocio_id = 'Este negocio ya está asignado al usuario';
+        errors.negocio_id = 'Este consultorio ya está asignado al usuario';
       }
     }
 

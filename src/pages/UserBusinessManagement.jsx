@@ -435,26 +435,28 @@ const UserBusinessManagement = () => {
    * Activar/Desactivar asignación
    */
   const handleToggleAssignmentStatus = (assignment) => {
+    const isActive = assignment.estado === 'activo';
+
     setConfirmModal({
       isOpen: true,
-      title: assignment.activo ? 'Desactivar Asignación' : 'Activar Asignación',
-      message: assignment.activo
-        ? '¿Está seguro de desactivar esta asignación? El usuario perderá acceso a este negocio.'
-        : '¿Está seguro de activar esta asignación? El usuario recuperará acceso a este negocio.',
-      confirmText: assignment.activo ? 'Desactivar' : 'Activar',
-      type: assignment.activo ? 'danger' : 'success',
+      title: isActive ? 'Desactivar Asignación' : 'Activar Asignación',
+      message: isActive
+        ? '¿Está seguro de desactivar esta asignación? El usuario perderá acceso a este consultorio.'
+        : '¿Está seguro de activar esta asignación? El usuario recuperará acceso a este consultorio.',
+      confirmText: isActive ? 'Desactivar' : 'Activar',
+      type: isActive ? 'danger' : 'success',
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
         setErrorMessage('');
         setSuccessMessage('');
 
-        const result = assignment.activo
+        const result = isActive
           ? await deactivateBusinessAssignment(assignment.id)
           : await activateBusinessAssignment(assignment.id);
 
         if (result.success) {
           setSuccessMessage(
-            assignment.activo
+            isActive
               ? 'Asignación desactivada exitosamente'
               : 'Asignación activada exitosamente'
           );
@@ -466,7 +468,7 @@ const UserBusinessManagement = () => {
           setTimeout(() => setSuccessMessage(''), 3000);
         } else {
           setErrorMessage(
-            assignment.activo
+            isActive
               ? 'Error al desactivar la asignación'
               : 'Error al activar la asignación'
           );
