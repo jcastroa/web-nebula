@@ -3,6 +3,7 @@ import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus, Filter } from 'l
 import UserList from '../components/users/UserList';
 import UserFormModal from '../components/users/UserFormModal';
 import FiltersModal from '../components/users/FiltersModal';
+import ConfirmModal from '../components/common/ConfirmModal';
 import BusinessAssignmentForm from '../components/users/BusinessAssignmentForm';
 import BusinessAssignmentList from '../components/users/BusinessAssignmentList';
 import {
@@ -71,6 +72,16 @@ const UserBusinessManagement = () => {
   // Estados para el modal de filtros
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
 
+  // Estados para el modal de confirmación
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    type: 'warning',
+    onConfirm: null
+  });
+
   // Estados para las asignaciones
   const [currentUser, setCurrentUser] = useState(null);
   const [assignments, setAssignments] = useState([]);
@@ -113,10 +124,10 @@ const UserBusinessManagement = () => {
     const result = await getUsers(params);
 
     if (result.success) {
-      setUsers(result.data.items || result.data);
+      setUsers(result.data.users || []);
       setPagination(prev => ({
         ...prev,
-        totalItems: result.data.total || result.data.length
+        totalItems: result.data.total || 0
       }));
     } else {
       setErrorMessage('Error al cargar usuarios');
@@ -281,40 +292,44 @@ const UserBusinessManagement = () => {
   /**
    * Activar/Desactivar usuario
    */
-  const handleToggleUserStatus = async (user) => {
-    const confirmMessage = user.activo
-      ? '¿Está seguro de desactivar este usuario? Perderá acceso al sistema.'
-      : '¿Está seguro de activar este usuario? Recuperará acceso al sistema.';
+  const handleToggleUserStatus = (user) => {
+    setConfirmModal({
+      isOpen: true,
+      title: user.is_active ? 'Desactivar Usuario' : 'Activar Usuario',
+      message: user.is_active
+        ? '¿Está seguro de desactivar este usuario? Perderá acceso al sistema.'
+        : '¿Está seguro de activar este usuario? Recuperará acceso al sistema.',
+      confirmText: user.is_active ? 'Desactivar' : 'Activar',
+      type: user.is_active ? 'danger' : 'success',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setErrorMessage('');
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+        const result = user.is_active
+          ? await deactivateUser(user.id)
+          : await activateUser(user.id);
 
-    setErrorMessage('');
+        if (result.success) {
+          setSuccessMessage(
+            user.is_active
+              ? 'Usuario desactivado exitosamente'
+              : 'Usuario activado exitosamente'
+          );
 
-    const result = user.activo
-      ? await deactivateUser(user.id)
-      : await activateUser(user.id);
+          // Recargar lista de usuarios
+          await loadUsers();
 
-    if (result.success) {
-      setSuccessMessage(
-        user.activo
-          ? 'Usuario desactivado exitosamente'
-          : 'Usuario activado exitosamente'
-      );
-
-      // Recargar lista de usuarios
-      await loadUsers();
-
-      // Limpiar mensaje después de 3 segundos
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } else {
-      setErrorMessage(
-        user.activo
-          ? 'Error al desactivar el usuario'
-          : 'Error al activar el usuario'
-      );
-    }
+          // Limpiar mensaje después de 3 segundos
+          setTimeout(() => setSuccessMessage(''), 3000);
+        } else {
+          setErrorMessage(
+            user.is_active
+              ? 'Error al desactivar el usuario'
+              : 'Error al activar el usuario'
+          );
+        }
+      }
+    });
   };
 
   /**
@@ -419,41 +434,45 @@ const UserBusinessManagement = () => {
   /**
    * Activar/Desactivar asignación
    */
-  const handleToggleAssignmentStatus = async (assignment) => {
-    const confirmMessage = assignment.activo
-      ? '¿Está seguro de desactivar esta asignación? El usuario perderá acceso a este negocio.'
-      : '¿Está seguro de activar esta asignación? El usuario recuperará acceso a este negocio.';
+  const handleToggleAssignmentStatus = (assignment) => {
+    setConfirmModal({
+      isOpen: true,
+      title: assignment.activo ? 'Desactivar Asignación' : 'Activar Asignación',
+      message: assignment.activo
+        ? '¿Está seguro de desactivar esta asignación? El usuario perderá acceso a este negocio.'
+        : '¿Está seguro de activar esta asignación? El usuario recuperará acceso a este negocio.',
+      confirmText: assignment.activo ? 'Desactivar' : 'Activar',
+      type: assignment.activo ? 'danger' : 'success',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setErrorMessage('');
+        setSuccessMessage('');
 
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
+        const result = assignment.activo
+          ? await deactivateBusinessAssignment(assignment.id)
+          : await activateBusinessAssignment(assignment.id);
 
-    setErrorMessage('');
-    setSuccessMessage('');
+        if (result.success) {
+          setSuccessMessage(
+            assignment.activo
+              ? 'Asignación desactivada exitosamente'
+              : 'Asignación activada exitosamente'
+          );
 
-    const result = assignment.activo
-      ? await deactivateBusinessAssignment(assignment.id)
-      : await activateBusinessAssignment(assignment.id);
+          // Recargar asignaciones
+          await loadAssignments(currentUser.id);
 
-    if (result.success) {
-      setSuccessMessage(
-        assignment.activo
-          ? 'Asignación desactivada exitosamente'
-          : 'Asignación activada exitosamente'
-      );
-
-      // Recargar asignaciones
-      await loadAssignments(currentUser.id);
-
-      // Limpiar mensaje de éxito después de 3 segundos
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } else {
-      setErrorMessage(
-        assignment.activo
-          ? 'Error al desactivar la asignación'
-          : 'Error al activar la asignación'
-      );
-    }
+          // Limpiar mensaje de éxito después de 3 segundos
+          setTimeout(() => setSuccessMessage(''), 3000);
+        } else {
+          setErrorMessage(
+            assignment.activo
+              ? 'Error al desactivar la asignación'
+              : 'Error al activar la asignación'
+          );
+        }
+      }
+    });
   };
 
   /**
@@ -571,7 +590,7 @@ const UserBusinessManagement = () => {
                   </div>
                   <div>
                     <p className="text-blue-700 font-medium">Nombre</p>
-                    <p className="text-blue-900">{currentUser.nombres} {currentUser.apellidos}</p>
+                    <p className="text-blue-900">{currentUser.first_name} {currentUser.last_name}</p>
                   </div>
                   <div>
                     <p className="text-blue-700 font-medium">Email</p>
@@ -579,7 +598,7 @@ const UserBusinessManagement = () => {
                   </div>
                   <div>
                     <p className="text-blue-700 font-medium">Rol Global</p>
-                    <p className="text-blue-900">{currentUser.rol_global || 'Sin rol global'}</p>
+                    <p className="text-blue-900">{currentUser.rol_global_nombre || 'Sin rol global'}</p>
                   </div>
                 </div>
               </div>
@@ -587,7 +606,7 @@ const UserBusinessManagement = () => {
               {/* Formulario de asignación */}
               <BusinessAssignmentForm
                 userId={currentUser.id}
-                userHasGlobalRole={!!currentUser.rol_global}
+                userHasGlobalRole={!!currentUser.rol_global_nombre}
                 currentAssignments={assignments}
                 onSubmit={handleSaveAssignment}
                 isLoading={isSavingAssignment}
@@ -622,6 +641,17 @@ const UserBusinessManagement = () => {
           onApplyFilters={handleApplyFilters}
           initialFilters={filters}
           roles={roles}
+        />
+
+        {/* Modal de confirmación */}
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+          type={confirmModal.type}
         />
       </div>
     </div>

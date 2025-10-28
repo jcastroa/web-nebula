@@ -133,7 +133,7 @@ const UserList = ({
             <div
               key={user.id}
               className={`bg-white rounded-xl p-5 border-2 transition-all
-                ${user.activo
+                ${user.is_active
                   ? 'border-slate-200 hover:border-slate-300'
                   : 'border-red-200 bg-red-50/30'
                 }`}
@@ -144,20 +144,20 @@ const UserList = ({
                   {/* Header con username y estado */}
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 rounded-lg">
-                      <User className={`w-5 h-5 ${user.activo ? 'text-blue-600' : 'text-slate-400'}`} />
+                      <User className={`w-5 h-5 ${user.is_active ? 'text-blue-600' : 'text-slate-400'}`} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-lg text-slate-800">
                           {user.username}
                         </h3>
-                        <div className={`w-2 h-2 rounded-full ${user.activo ? 'bg-green-500' : 'bg-red-500'}`} />
-                        <span className={`text-sm font-medium ${user.activo ? 'text-green-700' : 'text-red-700'}`}>
-                          {user.activo ? 'Activo' : 'Inactivo'}
+                        <div className={`w-2 h-2 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <span className={`text-sm font-medium ${user.is_active ? 'text-green-700' : 'text-red-700'}`}>
+                          {user.is_active ? 'Activo' : 'Inactivo'}
                         </span>
                       </div>
                       <p className="text-sm text-slate-600 mt-1">
-                        {user.nombres} {user.apellidos}
+                        {user.first_name} {user.last_name}
                       </p>
                     </div>
                   </div>
@@ -176,7 +176,7 @@ const UserList = ({
                       <div>
                         <p className="text-xs text-slate-500">Rol Global</p>
                         <p className="text-sm text-slate-800">
-                          {user.rol_global || 'Sin rol global'}
+                          {user.rol_global_nombre || 'Sin rol global'}
                         </p>
                       </div>
                     </div>
@@ -213,7 +213,7 @@ const UserList = ({
                   {/* Botón Gestionar Asignaciones */}
                   <button
                     onClick={() => onManageAssignments(user)}
-                    disabled={!user.activo}
+                    disabled={!user.is_active}
                     className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors
                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     title="Gestionar asignaciones"
@@ -224,7 +224,7 @@ const UserList = ({
                   {/* Botón Editar */}
                   <button
                     onClick={() => onEdit(user)}
-                    disabled={!user.activo}
+                    disabled={!user.is_active}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors
                       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     title="Editar usuario"
@@ -236,13 +236,13 @@ const UserList = ({
                   <button
                     onClick={() => onToggleStatus(user)}
                     className={`p-2 rounded-lg transition-colors
-                      ${user.activo
+                      ${user.is_active
                         ? 'text-red-600 hover:bg-red-50'
                         : 'text-green-600 hover:bg-green-50'
                       }`}
-                    title={user.activo ? 'Desactivar usuario' : 'Activar usuario'}
+                    title={user.is_active ? 'Desactivar usuario' : 'Activar usuario'}
                   >
-                    {user.activo ? (
+                    {user.is_active ? (
                       <ToggleLeft className="w-5 h-5" />
                     ) : (
                       <ToggleRight className="w-5 h-5" />
