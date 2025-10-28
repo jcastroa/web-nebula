@@ -2,6 +2,7 @@ import api from './api';
 
 /**
  * Servicio para gestión de usuarios y sus asignaciones a negocios
+ * @version 1.0.1 - All endpoints fixed with trailing slashes
  */
 
 /**
