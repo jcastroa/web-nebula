@@ -2,7 +2,7 @@ import api from './api';
 
 /**
  * Servicio para gestión de usuarios y sus asignaciones a negocios
- * @version 1.0.1 - All endpoints fixed with trailing slashes
+ * @version 1.0.2 - All endpoints fixed with trailing slashes + debugging
  */
 
 /**
@@ -173,9 +173,13 @@ export const createBusinessAssignment = async (assignmentData) => {
  */
 export const getUserAssignments = async (userId) => {
   try {
-    const response = await api.get(`/usuarios/${userId}/asignaciones/`);
+    const url = `/usuarios/${userId}/asignaciones/`;
+    console.log('🔍 Fetching assignments from:', url);
+    const response = await api.get(url);
+    console.log('✅ Assignments fetched successfully');
     return { success: true, data: response.data };
   } catch (error) {
+    console.error('❌ Error fetching assignments:', error);
     return {
       success: false,
       error: error.response?.data || error.message,
