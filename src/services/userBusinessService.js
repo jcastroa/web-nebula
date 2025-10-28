@@ -191,7 +191,7 @@ export const getUserAssignments = async (userId) => {
  */
 export const updateBusinessAssignment = async (assignmentId, assignmentData) => {
   try {
-    const response = await api.put(`/usuarios/asignaciones/${assignmentId}`, assignmentData);
+    const response = await api.put(`/usuarios/asignaciones/${assignmentId}/`, assignmentData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
