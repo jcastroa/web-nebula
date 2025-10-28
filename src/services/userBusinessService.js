@@ -173,7 +173,8 @@ export const createBusinessAssignment = async (assignmentData) => {
  */
 export const getUserAssignments = async (userId) => {
   try {
-    const url = `/usuarios/${userId}/asignaciones/`;
+    // Sin trailing slash para este endpoint específico
+    const url = `/usuarios/${userId}/asignaciones`;
     console.log('🔍 Fetching assignments from:', url);
     const response = await api.get(url);
     console.log('✅ Assignments fetched successfully');

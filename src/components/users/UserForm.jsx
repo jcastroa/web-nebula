@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Shield } from 'lucide-react';
-import { LoadingSpinner } from '../common/LoadingSpinner';
+import { LoadingSpinner, ButtonSpinner } from '../common/LoadingSpinner';
 import { getRoles } from '../../services/userBusinessService';
 
 /**
@@ -257,7 +257,7 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
         >
           {isLoading ? (
             <>
-              <LoadingSpinner size="sm" />
+              <ButtonSpinner className="w-4 h-4" />
               Guardando...
             </>
           ) : (
