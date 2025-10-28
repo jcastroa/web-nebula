@@ -47,7 +47,7 @@ export const getUsers = async (params = {}) => {
  */
 export const getUserById = async (userId) => {
   try {
-    const response = await api.get(`/usuarios/${userId}`);
+    const response = await api.get(`/usuarios/${userId}/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -66,7 +66,7 @@ export const getUserById = async (userId) => {
  */
 export const updateUser = async (userId, userData) => {
   try {
-    const response = await api.put(`/usuarios/${userId}`, userData);
+    const response = await api.put(`/usuarios/${userId}/`, userData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -84,7 +84,7 @@ export const updateUser = async (userId, userData) => {
  */
 export const deactivateUser = async (userId) => {
   try {
-    const response = await api.patch(`/usuarios/${userId}/desactivar`);
+    const response = await api.patch(`/usuarios/${userId}/desactivar/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -102,7 +102,7 @@ export const deactivateUser = async (userId) => {
  */
 export const activateUser = async (userId) => {
   try {
-    const response = await api.patch(`/usuarios/${userId}/activar`);
+    const response = await api.patch(`/usuarios/${userId}/activar/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -209,7 +209,7 @@ export const updateBusinessAssignment = async (assignmentId, assignmentData) => 
  */
 export const deactivateBusinessAssignment = async (assignmentId) => {
   try {
-    const response = await api.patch(`/usuarios/asignaciones/${assignmentId}/desactivar`);
+    const response = await api.patch(`/usuarios/asignaciones/${assignmentId}/desactivar/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -227,7 +227,7 @@ export const deactivateBusinessAssignment = async (assignmentId) => {
  */
 export const activateBusinessAssignment = async (assignmentId) => {
   try {
-    const response = await api.patch(`/usuarios/asignaciones/${assignmentId}/activar`);
+    const response = await api.patch(`/usuarios/asignaciones/${assignmentId}/activar/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
