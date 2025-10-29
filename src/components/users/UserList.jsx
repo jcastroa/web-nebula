@@ -127,9 +127,6 @@ const UserList = ({
                     Usuario
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Rol Global
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">
@@ -162,6 +159,7 @@ const UserList = ({
                         <div>
                           <p className="font-semibold text-slate-900">{user.first_name} {user.last_name}</p>
                           <p className="text-sm text-blue-600">@{user.username}</p>
+                          <p className="text-sm text-slate-600">{user.email}</p>
                           {user.created_at && (
                             <p className="text-xs text-slate-400 mt-0.5">
                               Creado: {new Date(user.created_at).toLocaleDateString('es-ES', {
@@ -173,11 +171,6 @@ const UserList = ({
                           )}
                         </div>
                       </div>
-                    </td>
-
-                    {/* Email */}
-                    <td className="px-4 py-3">
-                      <p className="text-sm text-slate-900">{user.email}</p>
                     </td>
 
                     {/* Rol Global */}
