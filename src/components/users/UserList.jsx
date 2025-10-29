@@ -160,8 +160,8 @@ const UserList = ({
                           <User className={`w-4 h-4 ${user.is_active ? 'text-blue-600' : 'text-slate-400'}`} />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{user.username}</p>
-                          <p className="text-sm text-slate-600">{user.first_name} {user.last_name}</p>
+                          <p className="font-semibold text-slate-900">{user.first_name} {user.last_name}</p>
+                          <p className="text-sm text-blue-600">@{user.username}</p>
                           {user.created_at && (
                             <p className="text-xs text-slate-400 mt-0.5">
                               Creado: {new Date(user.created_at).toLocaleDateString('es-ES', {

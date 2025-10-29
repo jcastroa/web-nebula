@@ -615,37 +615,32 @@ const UserBusinessManagement = () => {
             <div className="space-y-6">
               {/* Información del usuario */}
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-600 rounded-xl">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-slate-800 mb-3">
-                      {currentUser.first_name} {currentUser.last_name}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-blue-600" />
-                        <div>
-                          <p className="text-xs text-slate-500">Username</p>
-                          <p className="text-sm font-medium text-slate-900">{currentUser.username}</p>
-                        </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-4">
+                    {currentUser.first_name} {currentUser.last_name}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <p className="text-xs text-slate-500">Username</p>
+                        <p className="text-sm font-medium text-slate-900">@{currentUser.username}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-blue-600" />
-                        <div>
-                          <p className="text-xs text-slate-500">Email</p>
-                          <p className="text-sm font-medium text-slate-900">{currentUser.email}</p>
-                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <p className="text-xs text-slate-500">Email</p>
+                        <p className="text-sm font-medium text-slate-900">{currentUser.email}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-purple-600" />
-                        <div>
-                          <p className="text-xs text-slate-500">Rol Global</p>
-                          <p className="text-sm font-medium text-slate-900">
-                            {currentUser.rol_global_nombre || 'Sin rol global'}
-                          </p>
-                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      <div>
+                        <p className="text-xs text-slate-500">Rol Global</p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {currentUser.rol_global_nombre || 'Sin rol global'}
+                        </p>
                       </div>
                     </div>
                   </div>
