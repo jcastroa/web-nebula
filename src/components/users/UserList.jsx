@@ -162,6 +162,15 @@ const UserList = ({
                         <div>
                           <p className="font-medium text-slate-900">{user.username}</p>
                           <p className="text-sm text-slate-600">{user.first_name} {user.last_name}</p>
+                          {user.created_at && (
+                            <p className="text-xs text-slate-400 mt-0.5">
+                              Creado: {new Date(user.created_at).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -194,14 +203,21 @@ const UserList = ({
                     </td>
 
                     {/* Asignaciones */}
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3">
                       {user.asignaciones && user.asignaciones.length > 0 ? (
-                        <div className="flex items-center justify-center gap-1">
-                          <Building2 className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm font-medium text-slate-900">{user.asignaciones.length}</span>
+                        <div className="flex flex-wrap gap-1.5 justify-center">
+                          {user.asignaciones.map((asig, index) => (
+                            <span
+                              key={asig.id || index}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                            >
+                              <Building2 className="w-3 h-3" />
+                              {asig.consultorio_nombre}
+                            </span>
+                          ))}
                         </div>
                       ) : (
-                        <span className="text-sm text-slate-400">0</span>
+                        <span className="text-xs text-slate-400">Sin negocios</span>
                       )}
                     </td>
 
