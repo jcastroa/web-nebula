@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Shield } from 'lucide-react';
+import { User, Mail, Shield, AlertCircle } from 'lucide-react';
 import { LoadingSpinner, ButtonSpinner } from '../common/LoadingSpinner';
 import { getRoles } from '../../services/userBusinessService';
 
 /**
  * Formulario para crear/editar usuarios
  */
-const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel = true }) => {
+const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel = true, activeAssignmentsCount = 0 }) => {
   const [formData, setFormData] = useState({
     username: '',
     nombres: '',
@@ -18,6 +18,7 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
   const [fieldErrors, setFieldErrors] = useState({});
   const [roles, setRoles] = useState([]);
   const [loadingRoles, setLoadingRoles] = useState(true);
+  const [globalRoleWarning, setGlobalRoleWarning] = useState('');
 
   // Cargar roles disponibles
   useEffect(() => {
@@ -57,6 +58,16 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
         return newErrors;
       });
     }
+
+    // Validar si intenta asignar rol global con asignaciones activas
+    if (name === 'rol_global' && value && activeAssignmentsCount > 0) {
+      setGlobalRoleWarning(
+        `Este usuario tiene ${activeAssignmentsCount} asignación${activeAssignmentsCount > 1 ? 'es' : ''} activa${activeAssignmentsCount > 1 ? 's' : ''}. ` +
+        'Primero debe desactivar todas las asignaciones activas antes de asignar un rol global.'
+      );
+    } else {
+      setGlobalRoleWarning('');
+    }
   };
 
   const validateForm = () => {
@@ -80,6 +91,11 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
       errors.email = 'El email es requerido';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'El email no es válido';
+    }
+
+    // Validar que no se asigne rol global si hay asignaciones activas
+    if (formData.rol_global && activeAssignmentsCount > 0) {
+      errors.rol_global = `No se puede asignar rol global. Primero desactive las ${activeAssignmentsCount} asignación${activeAssignmentsCount > 1 ? 'es' : ''} activa${activeAssignmentsCount > 1 ? 's' : ''}.`;
     }
 
     setFieldErrors(errors);
@@ -210,6 +226,18 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
               <p className="text-red-600 text-sm mt-1">{fieldErrors.apellidos}</p>
             )}
           </div>
+
+          {/* Advertencia de asignaciones activas */}
+          {globalRoleWarning && (
+            <div className="md:col-span-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-amber-800 text-sm">{globalRoleWarning}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Rol Global (opcional) */}
           <div className="md:col-span-2">

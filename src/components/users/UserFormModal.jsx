@@ -5,7 +5,7 @@ import UserForm from './UserForm';
 /**
  * Modal para crear/editar usuarios
  */
-const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = false }) => {
+const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoading = false, activeAssignmentsCount = 0 }) => {
   const [generalError, setGeneralError] = useState('');
 
   if (!isOpen) return null;
@@ -71,6 +71,7 @@ const UserFormModal = ({ isOpen, onClose, onSubmit, initialData = null, isLoadin
               initialData={initialData}
               isLoading={isLoading}
               showPanel={false}
+              activeAssignmentsCount={activeAssignmentsCount}
             />
           </div>
         </div>

@@ -457,6 +457,17 @@ const UserBusinessManagement = () => {
   const handleToggleAssignmentStatus = (assignment) => {
     const isActive = assignment.estado === 'activo';
 
+    // Validar que no se active una asignación si el usuario tiene rol global
+    if (!isActive && currentUser && currentUser.rol_global_nombre) {
+      setErrorMessage(
+        `No se puede activar la asignación porque el usuario tiene un rol global (${currentUser.rol_global_nombre}). ` +
+        'Primero debe remover el rol global del usuario para poder activar asignaciones específicas.'
+      );
+      // Limpiar mensaje después de 5 segundos
+      setTimeout(() => setErrorMessage(''), 5000);
+      return;
+    }
+
     setConfirmModal({
       isOpen: true,
       title: isActive ? 'Desactivar Asignación' : 'Activar Asignación',
@@ -665,6 +676,11 @@ const UserBusinessManagement = () => {
           onSubmit={handleSaveUser}
           initialData={editingUser}
           isLoading={isSavingUser}
+          activeAssignmentsCount={
+            editingUser?.asignaciones
+              ? editingUser.asignaciones.filter(a => a.estado === 'activo').length
+              : 0
+          }
         />
 
         {/* Modal de filtros */}
