@@ -85,6 +85,7 @@ const BusinessAssignmentFormModal = ({
               isLoading={isLoading}
               editingAssignment={editingAssignment}
               onCancelEdit={handleClose}
+              showPanel={false}
             />
           </div>
         </div>

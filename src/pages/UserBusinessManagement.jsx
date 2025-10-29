@@ -4,7 +4,7 @@ import UserList from '../components/users/UserList';
 import UserFormModal from '../components/users/UserFormModal';
 import FiltersModal from '../components/users/FiltersModal';
 import ConfirmModal from '../components/common/ConfirmModal';
-import BusinessAssignmentForm from '../components/users/BusinessAssignmentForm';
+import BusinessAssignmentFormModal from '../components/users/BusinessAssignmentFormModal';
 import BusinessAssignmentList from '../components/users/BusinessAssignmentList';
 import {
   createUser,
@@ -88,6 +88,7 @@ const UserBusinessManagement = () => {
   const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
   const [isSavingAssignment, setIsSavingAssignment] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
 
   // Mensajes globales
   const [successMessage, setSuccessMessage] = useState('');
@@ -367,7 +368,7 @@ const UserBusinessManagement = () => {
   /**
    * Crear o actualizar asignación
    */
-  const handleSaveAssignment = async (assignmentData, setFieldErrors) => {
+  const handleSaveAssignment = async (assignmentData, setFieldErrors, setGeneralError) => {
     setIsSavingAssignment(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -394,7 +395,8 @@ const UserBusinessManagement = () => {
       // Recargar asignaciones
       await loadAssignments(currentUser.id);
 
-      // Limpiar formulario de edición
+      // Cerrar modal y limpiar
+      setIsAssignmentModalOpen(false);
       setEditingAssignment(null);
 
       // Limpiar mensaje de éxito después de 3 segundos
@@ -409,12 +411,25 @@ const UserBusinessManagement = () => {
         setFieldErrors(fieldErrors);
       }
 
-      if (generalError) {
-        setErrorMessage(generalError);
+      if (generalError && setGeneralError) {
+        // Mostrar error dentro del modal
+        setGeneralError(generalError);
       }
+
+      // NO cerrar el modal cuando hay errores
     }
 
     setIsSavingAssignment(false);
+  };
+
+  /**
+   * Abrir modal para crear asignación
+   */
+  const handleNewAssignment = () => {
+    setEditingAssignment(null);
+    setIsAssignmentModalOpen(true);
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
   /**
@@ -422,15 +437,17 @@ const UserBusinessManagement = () => {
    */
   const handleEditAssignment = (assignment) => {
     setEditingAssignment(assignment);
+    setIsAssignmentModalOpen(true);
     setErrorMessage('');
     setSuccessMessage('');
   };
 
   /**
-   * Cancelar edición de asignación
+   * Cancelar/Cerrar modal de asignación
    */
   const handleCancelEditAssignment = () => {
     setEditingAssignment(null);
+    setIsAssignmentModalOpen(false);
     setErrorMessage('');
   };
 
@@ -587,7 +604,17 @@ const UserBusinessManagement = () => {
             <div className="space-y-6">
               {/* Información del usuario */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                <h3 className="font-semibold text-blue-900 mb-3">Usuario:</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-blue-900">Usuario:</h3>
+                  <button
+                    onClick={handleNewAssignment}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
+                      transition-colors flex items-center gap-2 font-medium text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Nueva Asignación
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <p className="text-blue-700 font-medium">Username</p>
@@ -607,17 +634,6 @@ const UserBusinessManagement = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Formulario de asignación */}
-              <BusinessAssignmentForm
-                userId={currentUser.id}
-                userHasGlobalRole={!!currentUser.rol_global_nombre}
-                currentAssignments={assignments}
-                onSubmit={handleSaveAssignment}
-                isLoading={isSavingAssignment}
-                editingAssignment={editingAssignment}
-                onCancelEdit={handleCancelEditAssignment}
-              />
 
               {/* Lista de asignaciones */}
               <BusinessAssignmentList
@@ -647,6 +663,21 @@ const UserBusinessManagement = () => {
           initialFilters={filters}
           roles={roles}
         />
+
+        {/* Modal de asignaciones */}
+        {currentUser && (
+          <BusinessAssignmentFormModal
+            isOpen={isAssignmentModalOpen}
+            onClose={handleCancelEditAssignment}
+            userId={currentUser.id}
+            userHasGlobalRole={!!currentUser.rol_global_nombre}
+            currentAssignments={assignments}
+            onSubmit={handleSaveAssignment}
+            isLoading={isSavingAssignment}
+            editingAssignment={editingAssignment}
+            onCancelEdit={handleCancelEditAssignment}
+          />
+        )}
 
         {/* Modal de confirmación */}
         <ConfirmModal
