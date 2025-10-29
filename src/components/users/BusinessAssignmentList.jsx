@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Shield, Star, Edit2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Building2, Shield, Star, Edit2, ToggleLeft, ToggleRight, Calendar } from 'lucide-react';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 /**
@@ -54,6 +54,9 @@ const BusinessAssignmentList = ({
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">
                   Principal
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Fecha Asignación
+                </th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">
                   Estado
                 </th>
@@ -101,6 +104,32 @@ const BusinessAssignmentList = ({
                           <Star className="w-3 h-3" />
                           Principal
                         </span>
+                      ) : (
+                        <span className="text-xs text-slate-400">-</span>
+                      )}
+                    </td>
+
+                    {/* Fecha Asignación */}
+                    <td className="px-4 py-3">
+                      {assignment.fecha_asignacion ? (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-slate-400" />
+                          <div>
+                            <p className="text-sm text-slate-900">
+                              {new Date(assignment.fecha_asignacion).toLocaleDateString('es-ES', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {new Date(assignment.fecha_asignacion).toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
                       ) : (
                         <span className="text-xs text-slate-400">-</span>
                       )}

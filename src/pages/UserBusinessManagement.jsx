@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, ArrowLeft, CheckCircle, AlertTriangle, X, Plus, Filter } from 'lucide-react';
+import { Users, User, Mail, Shield, ArrowLeft, CheckCircle, AlertTriangle, X, Plus, Filter } from 'lucide-react';
 import UserList from '../components/users/UserList';
 import UserFormModal from '../components/users/UserFormModal';
 import FiltersModal from '../components/users/FiltersModal';
@@ -560,6 +560,17 @@ const UserBusinessManagement = () => {
                 </button>
               </div>
             )}
+
+            {currentView === 'assignments' && (
+              <button
+                onClick={handleNewAssignment}
+                className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg
+                  hover:bg-blue-700 transition-colors font-medium shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Asignación
+              </button>
+            )}
           </div>
         </div>
 
@@ -603,34 +614,40 @@ const UserBusinessManagement = () => {
           {currentView === 'assignments' && currentUser && (
             <div className="space-y-6">
               {/* Información del usuario */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-blue-900">Usuario:</h3>
-                  <button
-                    onClick={handleNewAssignment}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700
-                      transition-colors flex items-center gap-2 font-medium text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Nueva Asignación
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-blue-700 font-medium">Username</p>
-                    <p className="text-blue-900">{currentUser.username}</p>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-600 rounded-xl">
+                    <Users className="w-6 h-6 text-white" />
                   </div>
-                  <div>
-                    <p className="text-blue-700 font-medium">Nombre</p>
-                    <p className="text-blue-900">{currentUser.first_name} {currentUser.last_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-700 font-medium">Email</p>
-                    <p className="text-blue-900">{currentUser.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-700 font-medium">Rol Global</p>
-                    <p className="text-blue-900">{currentUser.rol_global_nombre || 'Sin rol global'}</p>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-slate-800 mb-3">
+                      {currentUser.first_name} {currentUser.last_name}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-blue-600" />
+                        <div>
+                          <p className="text-xs text-slate-500">Username</p>
+                          <p className="text-sm font-medium text-slate-900">{currentUser.username}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-blue-600" />
+                        <div>
+                          <p className="text-xs text-slate-500">Email</p>
+                          <p className="text-sm font-medium text-slate-900">{currentUser.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-purple-600" />
+                        <div>
+                          <p className="text-xs text-slate-500">Rol Global</p>
+                          <p className="text-sm font-medium text-slate-900">
+                            {currentUser.rol_global_nombre || 'Sin rol global'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

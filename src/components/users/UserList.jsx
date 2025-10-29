@@ -106,15 +106,6 @@ const UserList = ({
         roles={roles}
       />
 
-      {/* Contador de resultados */}
-      {totalItems > 0 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-slate-600">
-            Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} usuarios
-          </p>
-        </div>
-      )}
-
       {/* Tabla de usuarios */}
       {users.length === 0 ? (
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
