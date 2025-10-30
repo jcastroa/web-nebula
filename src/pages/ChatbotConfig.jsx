@@ -396,40 +396,46 @@ const SeccionServicios = ({ data, onChange }) => {
                     </div>
 
                     {data.especialidades.length === 0 ? (
-                        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                            <p className="text-gray-500 text-sm">No hay especialidades agregadas</p>
-                            <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar" para comenzar</p>
+                        <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+                            <p className="text-gray-500 text-sm mb-1">No hay especialidades agregadas</p>
+                            <p className="text-gray-400 text-xs">Comienza agregando una especialidad con su precio</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {data.especialidades.map((esp, index) => (
-                                <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div key={index} className="flex gap-3 items-start p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <input
-                                            type="text"
-                                            value={esp.nombre}
-                                            onChange={(e) => actualizarEspecialidad(index, 'nombre', e.target.value)}
-                                            placeholder="Ej: Medicina General"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                        />
-                                        <div className="flex gap-2">
-                                            <span className="flex items-center px-3 text-gray-600 bg-white border border-gray-300 rounded-l-lg">
-                                                S/
-                                            </span>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Especialidad</label>
                                             <input
-                                                type="number"
-                                                value={esp.precio}
-                                                onChange={(e) => actualizarEspecialidad(index, 'precio', e.target.value)}
-                                                placeholder="120"
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                                type="text"
+                                                value={esp.nombre}
+                                                onChange={(e) => actualizarEspecialidad(index, 'nombre', e.target.value)}
+                                                placeholder="Ej: Medicina General"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
                                             />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Precio</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                                                    S/
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    value={esp.precio}
+                                                    onChange={(e) => actualizarEspecialidad(index, 'precio', e.target.value)}
+                                                    placeholder="120"
+                                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => eliminarEspecialidad(index)}
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Eliminar"
+                                        className="mt-5 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Eliminar especialidad"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
@@ -456,35 +462,41 @@ const SeccionServicios = ({ data, onChange }) => {
                     </div>
 
                     {data.preciosAdicionales.length === 0 ? (
-                        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                            <p className="text-gray-500 text-sm">No hay precios adicionales agregados</p>
-                            <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar" para comenzar</p>
+                        <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+                            <p className="text-gray-500 text-sm mb-1">No hay precios adicionales agregados</p>
+                            <p className="text-gray-400 text-xs">Agrega recargos, descuentos o modificadores de precio</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {data.preciosAdicionales.map((precio, index) => (
-                                <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div key={index} className="flex gap-3 items-start p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <input
-                                            type="text"
-                                            value={precio.concepto}
-                                            onChange={(e) => actualizarPrecioAdicional(index, 'concepto', e.target.value)}
-                                            placeholder="Ej: Primera consulta (paciente nuevo)"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={precio.modificador}
-                                            onChange={(e) => actualizarPrecioAdicional(index, 'modificador', e.target.value)}
-                                            placeholder="Ej: +S/20 sobre el precio base"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                        />
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Concepto</label>
+                                            <input
+                                                type="text"
+                                                value={precio.concepto}
+                                                onChange={(e) => actualizarPrecioAdicional(index, 'concepto', e.target.value)}
+                                                placeholder="Ej: Primera consulta (paciente nuevo)"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1">Modificador</label>
+                                            <input
+                                                type="text"
+                                                value={precio.modificador}
+                                                onChange={(e) => actualizarPrecioAdicional(index, 'modificador', e.target.value)}
+                                                placeholder="Ej: +S/20 sobre el precio base"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                            />
+                                        </div>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => eliminarPrecioAdicional(index)}
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Eliminar"
+                                        className="mt-5 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Eliminar precio adicional"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
@@ -543,26 +555,29 @@ const SeccionPoliticas = ({ data, onChange }) => {
                 </div>
 
                 {data.protocolos.length === 0 ? (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                        <p className="text-gray-500 text-sm">No hay protocolos agregados</p>
-                        <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar" para comenzar</p>
+                    <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-gray-500 text-sm mb-1">No hay protocolos agregados</p>
+                        <p className="text-gray-400 text-xs">Define las políticas y reglas de atención</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {data.protocolos.map((protocolo, index) => (
-                            <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <input
-                                    type="text"
-                                    value={protocolo}
-                                    onChange={(e) => actualizarProtocolo(index, e.target.value)}
-                                    placeholder="Ej: Las citas deben agendarse con al menos 24 horas de anticipación"
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                />
+                            <div key={index} className="flex gap-3 items-start p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Protocolo #{index + 1}</label>
+                                    <input
+                                        type="text"
+                                        value={protocolo}
+                                        onChange={(e) => actualizarProtocolo(index, e.target.value)}
+                                        placeholder="Ej: Las citas deben agendarse con al menos 24 horas de anticipación"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                    />
+                                </div>
                                 <button
                                     type="button"
                                     onClick={() => eliminarProtocolo(index)}
-                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Eliminar"
+                                    className="mt-5 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Eliminar protocolo"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </button>
