@@ -8,8 +8,8 @@ import {
     Save,
     Loader2,
     Eye,
-    EyeOff,
-    CheckCircle2
+    CheckCircle2,
+    X
 } from 'lucide-react';
 import { chatbotService } from '../services/chatbotService';
 
@@ -172,32 +172,10 @@ const ChatbotConfig = () => {
                         onClick={() => setShowPreview(!showPreview)}
                         className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                     >
-                        {showPreview ? (
-                            <>
-                                <EyeOff className="h-4 w-4" />
-                                Ocultar Vista Previa
-                            </>
-                        ) : (
-                            <>
-                                <Eye className="h-4 w-4" />
-                                Ver Vista Previa
-                            </>
-                        )}
+                        <Eye className="h-4 w-4" />
+                        Ver Vista Previa
                     </button>
                 </div>
-
-                {/* Vista previa del prompt */}
-                {showPreview && (
-                    <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                            <Eye className="h-5 w-5 text-gray-600" />
-                            Vista Previa del Prompt
-                        </h3>
-                        <pre className="bg-white border border-gray-300 rounded p-4 text-xs overflow-x-auto whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
-                            {generarVistaPrevia()}
-                        </pre>
-                    </div>
-                )}
 
                 {/* Sección 1: Sobre el Negocio */}
                 <SeccionNegocio
@@ -243,6 +221,14 @@ const ChatbotConfig = () => {
                         )}
                     </button>
                 </div>
+
+            {/* Modal de Vista Previa */}
+            {showPreview && (
+                <ModalVistaPrevia
+                    prompt={generarVistaPrevia()}
+                    onClose={() => setShowPreview(false)}
+                />
+            )}
         </div>
     );
 };
@@ -450,6 +436,46 @@ const SeccionPreguntasFrecuentes = ({ data, onChange }) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
                     placeholder="Ejemplo:&#10;¿Aceptan seguros médicos?&#10;Sí, trabajamos con los principales seguros del país...&#10;&#10;¿Hacen consultas a domicilio?&#10;Sí, contamos con servicio a domicilio..."
                 />
+            </div>
+        </div>
+    );
+};
+
+// Componente: Modal Vista Previa
+const ModalVistaPrevia = ({ prompt, onClose }) => {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+                {/* Header del Modal */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <Eye className="h-6 w-6 text-blue-600" />
+                        <h2 className="text-xl font-semibold text-gray-800">Vista Previa del Prompt</h2>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+                </div>
+
+                {/* Contenido del Modal */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    <pre className="bg-gray-50 border border-gray-300 rounded-lg p-4 text-sm whitespace-pre-wrap font-mono text-gray-800">
+                        {prompt}
+                    </pre>
+                </div>
+
+                {/* Footer del Modal */}
+                <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Cerrar
+                    </button>
+                </div>
             </div>
         </div>
     );
