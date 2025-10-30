@@ -309,7 +309,7 @@ function App() {
         />
 
         <Route
-          path="/usuarios/gestionar"
+          path="/configuracion/usuarios"
           element={
             <PrivateRoute>
               <UserBusinessManagement />
