@@ -89,6 +89,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
 import UserBusinessManagement from './pages/UserBusinessManagement';
+import BusinessConfig from './pages/BusinessConfig';
 
 // Wrapper que aplica el Layout automáticamente a las rutas protegidas
 const LayoutWrapper = ({ children }) => {
@@ -313,6 +314,10 @@ function App() {
           element={
             <PrivateRoute>
               <UserBusinessManagement />
+          path="/configuracion/negocios"
+          element={
+            <PrivateRoute>
+              <BusinessConfig />
             </PrivateRoute>
           }
         />
