@@ -243,7 +243,6 @@ const ChatbotConfig = () => {
                         )}
                     </button>
                 </div>
-            </div>
         </div>
     );
 };
