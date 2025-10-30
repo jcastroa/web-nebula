@@ -21,6 +21,8 @@ const ChatbotConfig = () => {
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
+    const [isNewConfig, setIsNewConfig] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
 
     const [config, setConfig] = useState({
         negocio: {
@@ -51,6 +53,7 @@ const ChatbotConfig = () => {
             setError(null);
             const data = await chatbotService.obtenerConfiguracion();
             setConfig(data);
+            setIsNewConfig(false);
         } catch (err) {
             console.error('Error al cargar configuración:', err);
 
@@ -58,14 +61,45 @@ const ChatbotConfig = () => {
             if (err.message?.includes('404') || err.message?.includes('not found')) {
                 console.log('No hay configuración guardada, usando valores por defecto');
                 setConfig(chatbotService.getConfiguracionDefault());
+                setIsNewConfig(true);
             } else {
                 // Para otros errores, mostrar mensaje pero también cargar valores por defecto
                 setError(err.message || 'Error al cargar la configuración del chatbot');
                 setConfig(chatbotService.getConfiguracionDefault());
+                setIsNewConfig(true);
             }
         } finally {
             setLoading(false);
         }
+    };
+
+    const validarConfiguracion = () => {
+        const errores = [];
+
+        // Validar Información del Negocio (obligatorio)
+        if (!config.negocio.nombre?.trim()) {
+            errores.push('El nombre del centro médico es obligatorio');
+        }
+        if (!config.negocio.horario?.trim()) {
+            errores.push('El horario de atención es obligatorio');
+        }
+        if (!config.negocio.telefono?.trim()) {
+            errores.push('El teléfono es obligatorio');
+        }
+
+        // Validar Servicios (al menos 1 especialidad obligatoria)
+        if (!config.servicios.especialidades || config.servicios.especialidades.length === 0) {
+            errores.push('Debes agregar al menos una especialidad');
+        } else {
+            const especialidadesValidas = config.servicios.especialidades.filter(
+                esp => esp.nombre?.trim() && esp.precio?.trim()
+            );
+            if (especialidadesValidas.length === 0) {
+                errores.push('Debes completar al menos una especialidad con nombre y precio');
+            }
+        }
+
+        return errores;
     };
 
     const handleGuardar = async () => {
@@ -73,10 +107,20 @@ const ChatbotConfig = () => {
             setSaving(true);
             setError(null);
             setSuccessMessage(null);
+            setValidationErrors([]);
+
+            // Validar antes de guardar
+            const errores = validarConfiguracion();
+            if (errores.length > 0) {
+                setValidationErrors(errores);
+                setError('Por favor completa todos los campos obligatorios');
+                return;
+            }
 
             const result = await chatbotService.guardarConfiguracion(config);
 
             setSuccessMessage(result.message || 'Configuración guardada exitosamente');
+            setIsNewConfig(false);
             setTimeout(() => setSuccessMessage(null), 5000);
         } catch (err) {
             setError(err.message || 'Error al guardar la configuración');
@@ -109,8 +153,9 @@ const ChatbotConfig = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="flex flex-col items-center justify-center min-h-screen">
+                <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+                <p className="text-gray-600 text-sm">Cargando configuración del chatbot...</p>
             </div>
         );
     }
@@ -127,6 +172,48 @@ const ChatbotConfig = () => {
                         Personaliza la información que el asistente virtual utilizará para responder a tus pacientes.
                     </p>
                 </div>
+
+                {/* Banner informativo según estado */}
+                {isNewConfig && (
+                    <div className="mb-6 bg-blue-50 border-l-4 border-blue-600 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0">
+                                <Bot className="h-6 w-6 text-blue-600 mt-0.5" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                                    Configura tu chatbot por primera vez
+                                </h3>
+                                <p className="text-sm text-blue-800">
+                                    Completa la información de tu consultorio. Los campos marcados como <span className="font-semibold">obligatorios</span> son necesarios para que el chatbot pueda responder correctamente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Mensajes de validación */}
+                {validationErrors.length > 0 && (
+                    <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                                <p className="text-sm font-semibold text-amber-900 mb-2">Campos obligatorios incompletos:</p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    {validationErrors.map((error, index) => (
+                                        <li key={index} className="text-sm text-amber-800">{error}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <button
+                                onClick={() => setValidationErrors([])}
+                                className="text-amber-600 hover:text-amber-800"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Mensajes de error/éxito */}
                 {error && (
@@ -252,6 +339,9 @@ const SeccionNegocio = ({ data, onChange }) => {
                 <div className="flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-blue-600" />
                     <h2 className="text-lg font-semibold text-gray-800">Información del Negocio</h2>
+                    <span className="ml-auto px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
+                        Obligatorio
+                    </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
                     Datos generales de tu consultorio que el chatbot compartirá con los pacientes.
@@ -260,7 +350,7 @@ const SeccionNegocio = ({ data, onChange }) => {
             <div className="p-6 space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Nombre del Centro Médico
+                        Nombre del Centro Médico <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
@@ -273,7 +363,7 @@ const SeccionNegocio = ({ data, onChange }) => {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Horario de Atención
+                        Horario de Atención <span className="text-red-500">*</span>
                     </label>
                     <input
                         type="text"
@@ -287,7 +377,7 @@ const SeccionNegocio = ({ data, onChange }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Teléfono
+                            Teléfono <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -382,6 +472,9 @@ const SeccionServicios = ({ data, onChange }) => {
                 <div className="flex items-center gap-2">
                     <DollarSign className="h-5 w-5 text-green-600" />
                     <h2 className="text-lg font-semibold text-gray-800">Servicios y Precios</h2>
+                    <span className="ml-auto px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
+                        Al menos 1 especialidad
+                    </span>
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
                     Lista de especialidades, precios y servicios adicionales que ofreces.
