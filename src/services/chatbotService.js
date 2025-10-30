@@ -99,9 +99,9 @@ TONO Y ESTILO:
 - Respetuoso de la privacidad y confidencialidad
 - Paciente para explicar procesos y responder dudas`;
 
-        if (preguntasFrecuentes && preguntasFrecuentes.trim()) {
-            prompt += `\n\nPREGUNTAS FRECUENTES:
-${preguntasFrecuentes}`;
+        const preguntasFormateadas = this.formatearPreguntasFrecuentes(preguntasFrecuentes);
+        if (preguntasFormateadas) {
+            prompt += `\n\n${preguntasFormateadas}`;
         }
 
         return prompt;
@@ -150,6 +150,20 @@ ${preguntasFrecuentes}`;
     }
 
     /**
+     * Formatea las preguntas frecuentes para el prompt
+     */
+    formatearPreguntasFrecuentes(preguntas) {
+        if (!preguntas || preguntas.length === 0) return '';
+
+        const lineas = preguntas
+            .filter(p => p.pregunta && p.respuesta)
+            .map(p => `${p.pregunta}\n${p.respuesta}`)
+            .join('\n\n');
+
+        return lineas ? `PREGUNTAS FRECUENTES:\n${lineas}` : '';
+    }
+
+    /**
      * Configuración por defecto (campos vacíos)
      */
     getConfiguracionDefault() {
@@ -169,7 +183,7 @@ ${preguntasFrecuentes}`;
             politicas: {
                 protocolos: []
             },
-            preguntasFrecuentes: ''
+            preguntasFrecuentes: []
         };
     }
 

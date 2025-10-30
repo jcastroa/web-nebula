@@ -38,7 +38,7 @@ const ChatbotConfig = () => {
         politicas: {
             protocolos: []
         },
-        preguntasFrecuentes: ''
+        preguntasFrecuentes: []
     });
 
     useEffect(() => {
@@ -200,7 +200,7 @@ const ChatbotConfig = () => {
                 {/* Sección 4: Preguntas Frecuentes */}
                 <SeccionPreguntasFrecuentes
                     data={config.preguntasFrecuentes}
-                    onChange={(value) => handleInputChange('preguntasFrecuentes', null, value)}
+                    onChange={(field, value) => handleInputChange('preguntasFrecuentes', field, value)}
                 />
 
                 {/* Botones de acción inferiores */}
@@ -592,6 +592,22 @@ const SeccionPoliticas = ({ data, onChange }) => {
 
 // Componente: Sección Preguntas Frecuentes
 const SeccionPreguntasFrecuentes = ({ data, onChange }) => {
+    const agregarPregunta = () => {
+        const nuevasPreguntas = [...data, { pregunta: '', respuesta: '' }];
+        onChange(null, nuevasPreguntas);
+    };
+
+    const eliminarPregunta = (index) => {
+        const nuevasPreguntas = data.filter((_, i) => i !== index);
+        onChange(null, nuevasPreguntas);
+    };
+
+    const actualizarPregunta = (index, campo, valor) => {
+        const nuevasPreguntas = [...data];
+        nuevasPreguntas[index][campo] = valor;
+        onChange(null, nuevasPreguntas);
+    };
+
     return (
         <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -604,13 +620,66 @@ const SeccionPreguntasFrecuentes = ({ data, onChange }) => {
                 </p>
             </div>
             <div className="p-6">
-                <textarea
-                    value={data}
-                    onChange={(e) => onChange(e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                    placeholder="Ejemplo:&#10;¿Aceptan seguros médicos?&#10;Sí, trabajamos con los principales seguros del país...&#10;&#10;¿Hacen consultas a domicilio?&#10;Sí, contamos con servicio a domicilio..."
-                />
+                <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                        Preguntas y Respuestas
+                    </label>
+                    <button
+                        type="button"
+                        onClick={agregarPregunta}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Agregar
+                    </button>
+                </div>
+
+                {data.length === 0 ? (
+                    <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-gray-500 text-sm mb-1">No hay preguntas frecuentes agregadas</p>
+                        <p className="text-gray-400 text-xs">Agrega preguntas comunes y sus respuestas</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {data.map((item, index) => (
+                            <div key={index} className="p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                                <div className="flex items-start justify-between mb-3">
+                                    <span className="text-xs font-semibold text-gray-500">FAQ #{index + 1}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => eliminarPregunta(index)}
+                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Eliminar pregunta"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Pregunta</label>
+                                        <input
+                                            type="text"
+                                            value={item.pregunta}
+                                            onChange={(e) => actualizarPregunta(index, 'pregunta', e.target.value)}
+                                            placeholder="Ej: ¿Aceptan seguros médicos?"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Respuesta</label>
+                                        <textarea
+                                            value={item.respuesta}
+                                            onChange={(e) => actualizarPregunta(index, 'respuesta', e.target.value)}
+                                            placeholder="Ej: Sí, trabajamos con los principales seguros del país incluyendo..."
+                                            rows={3}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
