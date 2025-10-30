@@ -185,46 +185,85 @@ El frontend envía tanto la configuración estructurada como el prompt completo 
 
 ### Base de Datos
 
-#### Opción 1: PostgreSQL (Configuración + Prompt)
-Sugerencia de esquema para PostgreSQL:
+#### Estrategia Híbrida: MariaDB + Firestore (REQUERIDA)
+
+El sistema utiliza una estrategia de doble persistencia para garantizar:
+- **MariaDB**: Almacenamiento principal con configuración completa para ediciones
+- **Firestore**: Colección `conocimiento_gpt` con prompt optimizado para acceso rápido del chatbot
+
+**IMPORTANTE:**
+- **Escritura (POST)**: Inserta en AMBAS bases de datos usando transacciones
+- **Lectura (GET)**: Lee SOLO de MariaDB
+- **Consistencia**: Si falla una inserción, se hace ROLLBACK de todo
+
+#### Esquema MariaDB
+
+Tabla `chatbot_configuracion`:
 
 ```sql
 CREATE TABLE chatbot_configuracion (
-    id SERIAL PRIMARY KEY,
-    consultorio_id INTEGER NOT NULL REFERENCES consultorios(id),
-    configuracion JSONB NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    negocio_id INT NOT NULL,
+    configuracion JSON NOT NULL,
     prompt_completo TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(consultorio_id)
-);
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY idx_negocio_id (negocio_id),
+    FOREIGN KEY (negocio_id) REFERENCES consultorios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Índice para búsquedas rápidas
-CREATE INDEX idx_chatbot_config_consultorio ON chatbot_configuracion(consultorio_id);
+-- Índice para búsquedas rápidas por negocio
+CREATE INDEX idx_chatbot_negocio ON chatbot_configuracion(negocio_id);
+
+-- Índice para consultas por fecha
+CREATE INDEX idx_chatbot_updated ON chatbot_configuracion(updated_at);
 ```
 
-#### Opción 2: Firestore (Solo Prompt)
-Si el backend solo necesita guardar en Firestore el prompt completo:
+**Notas del esquema:**
+- `negocio_id`: Referencia al consultorio/negocio (equivalente a consultorio_id)
+- `configuracion`: JSON con la estructura completa enviada por el frontend
+- `prompt_completo`: Texto completo del prompt generado por el frontend
+- `UNIQUE KEY`: Garantiza un solo registro por negocio
+- `ON UPDATE CURRENT_TIMESTAMP`: Actualiza automáticamente la fecha de modificación
+- `ENGINE=InnoDB`: Soporta transacciones con ROLLBACK
+- `utf8mb4`: Soporta emojis y caracteres especiales
+
+#### Esquema Firestore
+
+Colección: `conocimiento_gpt`
 
 ```javascript
-// Estructura en Firestore
+// Collection: conocimiento_gpt
+// Document ID: {negocio_id} (ej: "123", "456")
+
 {
-  consultorios: {
-    [consultorio_id]: {
-      chatbot: {
-        prompt_completo: "Eres un asistente médico virtual...",
-        configuracion: { /* config estructurada opcional */ },
-        updated_at: timestamp
-      }
-    }
-  }
+  negocio_id: 123,                                    // INT - ID del negocio/consultorio
+  prompt_completo: "Eres un asistente médico...",    // STRING - Prompt completo para el chatbot
+  updated_at: Timestamp                               // TIMESTAMP - Fecha de última actualización
 }
 ```
 
-#### Estrategia Híbrida (Recomendada)
-- **PostgreSQL**: Guardar `configuracion` (JSONB) para ediciones futuras
-- **Firestore**: Guardar `prompt_completo` (string) para acceso rápido del chatbot
-- Beneficio: Ediciones en interfaz + acceso optimizado para el chatbot
+**Ejemplo de documento:**
+```javascript
+// Documento: conocimiento_gpt/123
+{
+  negocio_id: 123,
+  prompt_completo: "Eres un asistente médico virtual del centro 'Centro Médico Salud y Vida'...",
+  updated_at: Timestamp(2024, 1, 15, 10, 30, 0)
+}
+```
+
+**Estructura de acceso:**
+```javascript
+// Acceso directo por negocio_id
+const docRef = firestore.collection('conocimiento_gpt').doc(negocio_id.toString());
+```
+
+**Beneficios de esta estructura:**
+1. **Acceso directo**: El chatbot puede obtener el prompt usando solo el negocio_id
+2. **Rendimiento**: Sin necesidad de queries complejos, acceso O(1)
+3. **Escalabilidad**: Cada negocio es un documento independiente
+4. **Simplicidad**: Solo los datos necesarios para el chatbot (negocio_id + prompt)
 
 ### Validaciones Recomendadas
 
@@ -315,29 +354,144 @@ Si falla en paso 7 (Firestore):
 - Rate limiting para prevenir abuso
 
 ### Testing
-Casos de prueba recomendados:
-1. Crear configuración nueva (primera vez)
-   - Validar que se guarde `configuracion` y `prompt_completo`
-2. Actualizar configuración existente
-   - Verificar que el `prompt_completo` se actualice correctamente
-3. Obtener configuración sin datos guardados (404)
-4. Validación de campos requeridos del payload
-   - `configuracion` es obligatorio
-   - `prompt_completo` es obligatorio y no vacío
-5. Validación de campos de configuración
-   - Negocio: nombre, horario, teléfono obligatorios
-   - Servicios: al menos 1 especialidad
-6. Validación de formatos (email, teléfono, URL)
-7. Permisos de acceso (solo admin del consultorio)
-8. Arrays vacíos y campos opcionales
-9. Longitud del `prompt_completo` (no exceder límites de Firestore)
+
+#### Casos de Prueba Funcionales
+
+1. **Crear configuración nueva (INSERT)**
+   - POST con datos válidos
+   - Verificar que se cree registro en MariaDB
+   - Verificar que se cree documento en Firestore `conocimiento_gpt/{negocio_id}`
+   - Validar que ambos tengan los mismos datos
+   - Respuesta debe incluir `id`, `negocio_id` y `updated_at`
+
+2. **Actualizar configuración existente (UPDATE)**
+   - POST con `negocio_id` que ya existe
+   - Verificar que se actualice (no duplique) en MariaDB
+   - Verificar que se actualice en Firestore
+   - Validar que `updated_at` se actualice en ambas bases
+
+3. **GET: Obtener configuración existente**
+   - Verificar que retorne todos los campos correctamente
+   - Validar que el JSON de `configuracion` se parsee correctamente
+   - Verificar que NO consulte Firestore (solo MariaDB)
+
+4. **GET: Configuración no existente (404)**
+   - Solicitar con `negocio_id` que no existe
+   - Debe retornar 404 con mensaje descriptivo
+
+#### Casos de Prueba de Validación
+
+5. **Validación de payload - campos requeridos**
+   - POST sin `configuracion` → Error 400
+   - POST sin `prompt_completo` → Error 400
+   - POST con `prompt_completo` < 100 caracteres → Error 400
+
+6. **Validación de configuración estructurada**
+   - `negocio.nombre` vacío → Error 422
+   - `negocio.horario` vacío → Error 422
+   - `negocio.telefono` vacío → Error 422
+   - `servicios.especialidades` array vacío → Error 422
+   - Especialidad sin `nombre` o `precio` → Error 422
+
+7. **Validación de formatos**
+   - Email inválido en `negocio.email` → Error 422
+   - URL inválida en `negocio.sitioWeb` → Error 422
+   - Teléfono inválido → Error 422
+
+#### Casos de Prueba de Transacciones
+
+8. **Rollback: Fallo en Firestore después de MariaDB exitoso**
+   - Simular error en Firestore (permisos, red, etc.)
+   - Verificar que MariaDB haga ROLLBACK
+   - Confirmar que NO quede registro en MariaDB
+   - Confirmar que NO quede documento en Firestore
+   - Debe retornar error 500 con detalle del fallo
+
+9. **Rollback: Error en MariaDB**
+   - Simular error en MariaDB (constraint violation, etc.)
+   - Verificar que NO se inserte en Firestore
+   - Debe retornar error 500
+
+10. **Consistencia de datos entre bases**
+    - Guardar configuración exitosamente
+    - Leer de MariaDB y de Firestore por separado
+    - Verificar que `prompt_completo` sea idéntico en ambas
+    - Verificar que `negocio_id` coincida
+    - Verificar que `updated_at` sea similar (tolerancia de segundos)
+
+#### Casos de Prueba de Seguridad
+
+11. **Autenticación requerida**
+    - Request sin cookies de autenticación → Error 401
+    - Request con token expirado → Error 401
+
+12. **Autorización por negocio**
+    - Usuario intenta acceder a configuración de otro negocio → Error 403
+    - Solo admin del negocio puede modificar configuración
+
+13. **SQL Injection y XSS**
+    - Intentar inyectar SQL en campos de texto
+    - Intentar inyectar scripts en `prompt_completo`
+    - Verificar que se saniticen correctamente
+
+14. **Rate Limiting**
+    - Múltiples requests rápidos desde misma IP
+    - Debe aplicar rate limiting después de N requests
+
+#### Casos de Prueba de Performance
+
+15. **Tiempo de respuesta aceptable**
+    - POST debe completar en < 2 segundos
+    - GET debe completar en < 500ms
+
+16. **Payload grande**
+    - POST con `prompt_completo` de ~8000 caracteres (válido)
+    - POST con payload > 1MB → Error 413 (Request Entity Too Large)
+
+#### Herramientas de Testing Sugeridas
+
+```python
+# Ejemplo de test con pytest
+import pytest
+from unittest.mock import patch
+
+@pytest.mark.asyncio
+async def test_rollback_on_firestore_failure():
+    """Verifica que se haga rollback si Firestore falla"""
+
+    # Arrange
+    payload = {
+        "configuracion": {...},
+        "prompt_completo": "..." * 100
+    }
+
+    # Simular fallo en Firestore
+    with patch('firestore.collection') as mock_firestore:
+        mock_firestore.side_effect = Exception("Firestore connection failed")
+
+        # Act
+        response = await client.post("/chatbot/configuracion", json=payload)
+
+        # Assert
+        assert response.status_code == 500
+        assert "Firestore" in response.json()["detail"]
+
+        # Verificar que NO quedó registro en MariaDB
+        result = await db.execute(
+            "SELECT COUNT(*) as count FROM chatbot_configuracion WHERE negocio_id = %s",
+            (test_negocio_id,)
+        )
+        assert result.fetchone()['count'] == 0
+```
 
 ### Ejemplo de Implementación Backend
 
 ```python
-# Ejemplo en Python/FastAPI
+# Ejemplo en Python/FastAPI con transacciones
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+import json
+from datetime import datetime
 
 router = APIRouter()
 
@@ -348,30 +502,163 @@ class ConfiguracionChatbot(BaseModel):
 @router.post("/chatbot/configuracion")
 async def guardar_configuracion(
     payload: ConfiguracionChatbot,
-    consultorio_id: int = Depends(get_current_consultorio_id)
+    negocio_id: int = Depends(get_current_negocio_id)
 ):
+    """
+    Guarda la configuración del chatbot en MariaDB y Firestore.
+    Usa transacciones para garantizar consistencia entre ambas bases.
+    """
+
     # 1. Validar payload
     if not payload.prompt_completo or len(payload.prompt_completo) < 100:
         raise HTTPException(400, "El prompt completo es requerido")
 
-    # 2. Guardar en PostgreSQL (para edición futura)
-    db_config = await db.chatbot_configuracion.upsert({
-        "consultorio_id": consultorio_id,
-        "configuracion": payload.configuracion,
-        "prompt_completo": payload.prompt_completo
-    })
+    if not payload.configuracion:
+        raise HTTPException(400, "La configuración es requerida")
 
-    # 3. Guardar en Firestore (para uso del chatbot)
-    firestore.collection("consultorios").document(str(consultorio_id)).set({
-        "chatbot": {
-            "prompt_completo": payload.prompt_completo,
-            "updated_at": firestore.SERVER_TIMESTAMP
+    # 2. Iniciar transacción en MariaDB
+    conn = await get_db_connection()
+    try:
+        await conn.begin()
+
+        # 3. UPSERT en MariaDB (INSERT o UPDATE si ya existe)
+        query = """
+            INSERT INTO chatbot_configuracion
+                (negocio_id, configuracion, prompt_completo, created_at, updated_at)
+            VALUES (%s, %s, %s, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE
+                configuracion = VALUES(configuracion),
+                prompt_completo = VALUES(prompt_completo),
+                updated_at = NOW()
+        """
+
+        await conn.execute(
+            query,
+            (
+                negocio_id,
+                json.dumps(payload.configuracion, ensure_ascii=False),
+                payload.prompt_completo
+            )
+        )
+
+        # Obtener el ID del registro (ya sea el insertado o el existente)
+        result = await conn.execute(
+            "SELECT id, updated_at FROM chatbot_configuracion WHERE negocio_id = %s",
+            (negocio_id,)
+        )
+        row = await result.fetchone()
+        config_id = row['id']
+        updated_at = row['updated_at']
+
+        # 4. Guardar en Firestore colección 'conocimiento_gpt'
+        try:
+            firestore_db = get_firestore_client()
+            doc_ref = firestore_db.collection('conocimiento_gpt').document(str(negocio_id))
+
+            doc_ref.set({
+                'negocio_id': negocio_id,
+                'prompt_completo': payload.prompt_completo,
+                'updated_at': firestore.SERVER_TIMESTAMP
+            })
+
+        except Exception as firestore_error:
+            # Si falla Firestore, hacer ROLLBACK de MariaDB
+            await conn.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error al guardar en Firestore: {str(firestore_error)}"
+            )
+
+        # 5. Si ambas operaciones fueron exitosas, hacer COMMIT
+        await conn.commit()
+
+        return {
+            "success": True,
+            "message": "Configuración guardada exitosamente",
+            "data": {
+                "id": config_id,
+                "negocio_id": negocio_id,
+                "updated_at": updated_at.isoformat()
+            }
         }
-    }, merge=True)
 
-    return {
-        "success": True,
-        "message": "Configuración guardada exitosamente",
-        "data": {"id": db_config.id}
-    }
+    except HTTPException:
+        # Re-lanzar HTTPException sin modificar
+        raise
+    except Exception as e:
+        # Cualquier otro error, hacer ROLLBACK
+        await conn.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al guardar la configuración: {str(e)}"
+        )
+    finally:
+        await conn.close()
+
+
+@router.get("/chatbot/configuracion")
+async def obtener_configuracion(
+    negocio_id: int = Depends(get_current_negocio_id)
+):
+    """
+    Obtiene la configuración del chatbot SOLO de MariaDB.
+    No consulta Firestore.
+    """
+    try:
+        conn = await get_db_connection()
+
+        query = """
+            SELECT
+                id,
+                negocio_id,
+                configuracion,
+                prompt_completo,
+                created_at,
+                updated_at
+            FROM chatbot_configuracion
+            WHERE negocio_id = %s
+        """
+
+        result = await conn.execute(query, (negocio_id,))
+        row = await result.fetchone()
+
+        if not row:
+            raise HTTPException(
+                status_code=404,
+                detail="No se encontró configuración para este consultorio"
+            )
+
+        # Parsear el JSON de configuración
+        configuracion = json.loads(row['configuracion'])
+
+        return {
+            "id": row['id'],
+            "negocio_id": row['negocio_id'],
+            "configuracion": configuracion,
+            "prompt_completo": row['prompt_completo'],
+            "created_at": row['created_at'].isoformat(),
+            "updated_at": row['updated_at'].isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener la configuración: {str(e)}"
+        )
+    finally:
+        await conn.close()
 ```
+
+**Notas importantes del código:**
+
+1. **Transacciones**: Se usa `BEGIN` → `COMMIT` / `ROLLBACK` para garantizar consistencia
+2. **UPSERT**: `ON DUPLICATE KEY UPDATE` permite crear o actualizar en una sola operación
+3. **Orden de operaciones**:
+   - Primero MariaDB (dentro de transacción)
+   - Luego Firestore
+   - Si Firestore falla → ROLLBACK de MariaDB
+4. **GET endpoint**: Lee SOLO de MariaDB, nunca de Firestore
+5. **Manejo de errores**: Captura excepciones y hace rollback apropiadamente
+6. **Firestore document ID**: Usa `negocio_id` como ID del documento para acceso directo
