@@ -272,17 +272,40 @@ Si el backend solo necesita guardar en Firestore el prompt completo:
 
 **Flujo:**
 ```
-Frontend                           Backend
-   |                                  |
-   | 1. Usuario edita config          |
-   | 2. Genera prompt_completo        |
-   | 3. POST { configuracion, prompt }|
-   |--------------------------------->|
-   |                                  | 4. Valida
-   |                                  | 5. Guarda en PostgreSQL
-   |                                  | 6. Guarda prompt en Firestore
-   |<---------------------------------|
-   | 7. Respuesta éxito              |
+Frontend                                    Backend                           Bases de Datos
+   |                                           |                                     |
+   | 1. Usuario edita config                   |                                     |
+   | 2. Genera prompt_completo                 |                                     |
+   | 3. POST { configuracion, prompt }         |                                     |
+   |------------------------------------------>|                                     |
+   |                                           | 4. Valida payload                   |
+   |                                           | 5. START TRANSACTION                |
+   |                                           |------------------------------------>|
+   |                                           |                          MariaDB:  |
+   |                                           | 6. UPSERT chatbot_configuracion     |
+   |                                           |------------------------------------>|
+   |                                           |<------------------------------------|
+   |                                           |              negocio_id retornado   |
+   |                                           |                                     |
+   |                                           | 7. Firestore: set conocimiento_gpt  |
+   |                                           |------------------------------------>|
+   |                                           |                          Firestore:|
+   |                                           |              doc {negocio_id, ...}  |
+   |                                           |<------------------------------------|
+   |                                           |                                     |
+   |                                           | 8. COMMIT (ambos OK)                |
+   |                                           |------------------------------------>|
+   |<------------------------------------------|                                     |
+   | 9. Respuesta éxito                        |                                     |
+
+
+Si falla en paso 7 (Firestore):
+   |                                           | 7. Error Firestore ❌              |
+   |                                           | 8. ROLLBACK MariaDB                 |
+   |                                           |------------------------------------>|
+   |                                           |           (se deshace INSERT)       |
+   |<------------------------------------------|                                     |
+   | 9. Error 500                              |                                     |
 ```
 
 ### Seguridad
