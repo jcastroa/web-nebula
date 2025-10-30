@@ -9,7 +9,9 @@ import {
     Loader2,
     Eye,
     CheckCircle2,
-    X
+    X,
+    Plus,
+    Trash2
 } from 'lucide-react';
 import { chatbotService } from '../services/chatbotService';
 
@@ -30,11 +32,11 @@ const ChatbotConfig = () => {
             email: ''
         },
         servicios: {
-            especialidades: '',
-            preciosAdicionales: ''
+            especialidades: [],
+            preciosAdicionales: []
         },
         politicas: {
-            protocolos: ''
+            protocolos: []
         },
         preguntasFrecuentes: ''
     });
@@ -333,6 +335,38 @@ const SeccionNegocio = ({ data, onChange }) => {
 
 // Componente: Sección Servicios
 const SeccionServicios = ({ data, onChange }) => {
+    const agregarEspecialidad = () => {
+        const nuevasEspecialidades = [...data.especialidades, { nombre: '', precio: '' }];
+        onChange('especialidades', nuevasEspecialidades);
+    };
+
+    const eliminarEspecialidad = (index) => {
+        const nuevasEspecialidades = data.especialidades.filter((_, i) => i !== index);
+        onChange('especialidades', nuevasEspecialidades);
+    };
+
+    const actualizarEspecialidad = (index, campo, valor) => {
+        const nuevasEspecialidades = [...data.especialidades];
+        nuevasEspecialidades[index][campo] = valor;
+        onChange('especialidades', nuevasEspecialidades);
+    };
+
+    const agregarPrecioAdicional = () => {
+        const nuevosPrecios = [...data.preciosAdicionales, { concepto: '', modificador: '' }];
+        onChange('preciosAdicionales', nuevosPrecios);
+    };
+
+    const eliminarPrecioAdicional = (index) => {
+        const nuevosPrecios = data.preciosAdicionales.filter((_, i) => i !== index);
+        onChange('preciosAdicionales', nuevosPrecios);
+    };
+
+    const actualizarPrecioAdicional = (index, campo, valor) => {
+        const nuevosPrecios = [...data.preciosAdicionales];
+        nuevosPrecios[index][campo] = valor;
+        onChange('preciosAdicionales', nuevosPrecios);
+    };
+
     return (
         <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -344,37 +378,120 @@ const SeccionServicios = ({ data, onChange }) => {
                     Lista de especialidades, precios y servicios adicionales que ofreces.
                 </p>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-6">
+                {/* Especialidades */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Especialidades Disponibles y Precios
-                    </label>
-                    <p className="text-xs text-gray-500 mb-2">
-                        Lista las especialidades con sus precios en el formato: - Especialidad: S/Precio
-                    </p>
-                    <textarea
-                        value={data.especialidades}
-                        onChange={(e) => onChange('especialidades', e.target.value)}
-                        rows={10}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                        placeholder="Ejemplo:&#10;- Medicina General: S/120&#10;- Pediatría: S/150&#10;- Ginecología: S/180&#10;- Cardiología: S/200&#10;- Dermatología: S/170&#10;- Nutrición: S/130&#10;- Psicología: S/160&#10;- Ortopedia: S/190"
-                    />
+                    <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Especialidades Disponibles y Precios
+                        </label>
+                        <button
+                            type="button"
+                            onClick={agregarEspecialidad}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Agregar
+                        </button>
+                    </div>
+
+                    {data.especialidades.length === 0 ? (
+                        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <p className="text-gray-500 text-sm">No hay especialidades agregadas</p>
+                            <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar" para comenzar</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {data.especialidades.map((esp, index) => (
+                                <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <input
+                                            type="text"
+                                            value={esp.nombre}
+                                            onChange={(e) => actualizarEspecialidad(index, 'nombre', e.target.value)}
+                                            placeholder="Ej: Medicina General"
+                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        />
+                                        <div className="flex gap-2">
+                                            <span className="flex items-center px-3 text-gray-600 bg-white border border-gray-300 rounded-l-lg">
+                                                S/
+                                            </span>
+                                            <input
+                                                type="number"
+                                                value={esp.precio}
+                                                onChange={(e) => actualizarEspecialidad(index, 'precio', e.target.value)}
+                                                placeholder="120"
+                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => eliminarEspecialidad(index)}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Eliminar"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Precios Adicionales y Descuentos
-                    </label>
-                    <p className="text-xs text-gray-500 mb-2">
-                        Información sobre costos adicionales, recargos y descuentos disponibles.
-                    </p>
-                    <textarea
-                        value={data.preciosAdicionales}
-                        onChange={(e) => onChange('preciosAdicionales', e.target.value)}
-                        rows={6}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                        placeholder="Ejemplo:&#10;- Primera consulta (paciente nuevo): +S/20 sobre el precio base&#10;- Consulta de urgencia (mismo día): +S/50 sobre el precio base&#10;- Consulta a domicilio: +S/100 sobre el precio base&#10;- Consulta virtual: -S/20 sobre el precio base&#10;- Descuento para adultos mayores y niños: 10% del precio base"
-                    />
+                {/* Precios Adicionales */}
+                <div className="pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Precios Adicionales y Descuentos
+                        </label>
+                        <button
+                            type="button"
+                            onClick={agregarPrecioAdicional}
+                            className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Agregar
+                        </button>
+                    </div>
+
+                    {data.preciosAdicionales.length === 0 ? (
+                        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <p className="text-gray-500 text-sm">No hay precios adicionales agregados</p>
+                            <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar" para comenzar</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {data.preciosAdicionales.map((precio, index) => (
+                                <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <input
+                                            type="text"
+                                            value={precio.concepto}
+                                            onChange={(e) => actualizarPrecioAdicional(index, 'concepto', e.target.value)}
+                                            placeholder="Ej: Primera consulta (paciente nuevo)"
+                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={precio.modificador}
+                                            onChange={(e) => actualizarPrecioAdicional(index, 'modificador', e.target.value)}
+                                            placeholder="Ej: +S/20 sobre el precio base"
+                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => eliminarPrecioAdicional(index)}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Eliminar"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -383,6 +500,22 @@ const SeccionServicios = ({ data, onChange }) => {
 
 // Componente: Sección Políticas
 const SeccionPoliticas = ({ data, onChange }) => {
+    const agregarProtocolo = () => {
+        const nuevosProtocolos = [...data.protocolos, ''];
+        onChange('protocolos', nuevosProtocolos);
+    };
+
+    const eliminarProtocolo = (index) => {
+        const nuevosProtocolos = data.protocolos.filter((_, i) => i !== index);
+        onChange('protocolos', nuevosProtocolos);
+    };
+
+    const actualizarProtocolo = (index, valor) => {
+        const nuevosProtocolos = [...data.protocolos];
+        nuevosProtocolos[index] = valor;
+        onChange('protocolos', nuevosProtocolos);
+    };
+
     return (
         <div className="mb-6 bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -395,21 +528,48 @@ const SeccionPoliticas = ({ data, onChange }) => {
                 </p>
             </div>
             <div className="p-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
                         Protocolos y Políticas
                     </label>
-                    <p className="text-xs text-gray-500 mb-2">
-                        Reglas sobre citas, cancelaciones, requisitos, pagos, etc.
-                    </p>
-                    <textarea
-                        value={data.protocolos}
-                        onChange={(e) => onChange('protocolos', e.target.value)}
-                        rows={8}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sm"
-                        placeholder="Ejemplo:&#10;- Las citas deben agendarse con al menos 24 horas de anticipación&#10;- Cancelaciones deben realizarse con mínimo 12 horas de antelación&#10;- Se requiere llegar 15 minutos antes de la hora programada&#10;- Traer identificación oficial y tarjeta del seguro médico (si aplica)&#10;- Para primera consulta, traer historial médico relevante&#10;- Pago de consulta al momento de la atención"
-                    />
+                    <button
+                        type="button"
+                        onClick={agregarProtocolo}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Agregar
+                    </button>
                 </div>
+
+                {data.protocolos.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <p className="text-gray-500 text-sm">No hay protocolos agregados</p>
+                        <p className="text-gray-400 text-xs mt-1">Haz clic en "Agregar" para comenzar</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {data.protocolos.map((protocolo, index) => (
+                            <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <input
+                                    type="text"
+                                    value={protocolo}
+                                    onChange={(e) => actualizarProtocolo(index, e.target.value)}
+                                    placeholder="Ej: Las citas deben agendarse con al menos 24 horas de anticipación"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => eliminarProtocolo(index)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Eliminar"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

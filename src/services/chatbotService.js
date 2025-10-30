@@ -79,14 +79,11 @@ INFORMACIÓN DEL CONSULTORIO:
 - Sitio web: ${negocio.sitioWeb}
 - Email: ${negocio.email}
 
-${servicios.especialidades ? `ESPECIALIDADES DISPONIBLES Y PRECIOS (EN SOLES):
-${servicios.especialidades}` : ''}
+${this.formatearEspecialidades(servicios.especialidades)}
 
-${servicios.preciosAdicionales ? `PRECIOS ADICIONALES:
-${servicios.preciosAdicionales}` : ''}
+${this.formatearPreciosAdicionales(servicios.preciosAdicionales)}
 
-${politicas.protocolos ? `PROTOCOLOS Y POLÍTICAS:
-${politicas.protocolos}` : ''}
+${this.formatearProtocolos(politicas.protocolos)}
 
 LIMITACIONES:
 - No puedes diagnosticar condiciones médicas
@@ -111,6 +108,48 @@ ${preguntasFrecuentes}`;
     }
 
     /**
+     * Formatea las especialidades para el prompt
+     */
+    formatearEspecialidades(especialidades) {
+        if (!especialidades || especialidades.length === 0) return '';
+
+        const lineas = especialidades
+            .filter(esp => esp.nombre && esp.precio)
+            .map(esp => `- ${esp.nombre}: S/${esp.precio}`)
+            .join('\n');
+
+        return lineas ? `ESPECIALIDADES DISPONIBLES Y PRECIOS (EN SOLES):\n${lineas}` : '';
+    }
+
+    /**
+     * Formatea los precios adicionales para el prompt
+     */
+    formatearPreciosAdicionales(precios) {
+        if (!precios || precios.length === 0) return '';
+
+        const lineas = precios
+            .filter(p => p.concepto && p.modificador)
+            .map(p => `- ${p.concepto}: ${p.modificador}`)
+            .join('\n');
+
+        return lineas ? `PRECIOS ADICIONALES:\n${lineas}` : '';
+    }
+
+    /**
+     * Formatea los protocolos para el prompt
+     */
+    formatearProtocolos(protocolos) {
+        if (!protocolos || protocolos.length === 0) return '';
+
+        const lineas = protocolos
+            .filter(p => p.trim())
+            .map(p => `- ${p}`)
+            .join('\n');
+
+        return lineas ? `PROTOCOLOS Y POLÍTICAS:\n${lineas}` : '';
+    }
+
+    /**
      * Configuración por defecto (campos vacíos)
      */
     getConfiguracionDefault() {
@@ -124,11 +163,11 @@ ${preguntasFrecuentes}`;
                 email: ''
             },
             servicios: {
-                especialidades: '',
-                preciosAdicionales: ''
+                especialidades: [],
+                preciosAdicionales: []
             },
             politicas: {
-                protocolos: ''
+                protocolos: []
             },
             preguntasFrecuentes: ''
         };
