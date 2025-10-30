@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import TemplateLayout from '../components/layout/TemplateLayout';
 import {
     Bot,
     Building2,
@@ -99,17 +98,14 @@ const ChatbotConfig = () => {
 
     if (loading) {
         return (
-            <TemplateLayout activeMenu="chatbot">
-                <div className="flex items-center justify-center min-h-screen">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                </div>
-            </TemplateLayout>
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
         );
     }
 
     return (
-        <TemplateLayout activeMenu="chatbot">
-            <div className="p-6 max-w-6xl mx-auto">
+        <div className="p-6 max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center gap-3 mb-2">
@@ -248,7 +244,7 @@ const ChatbotConfig = () => {
                     </button>
                 </div>
             </div>
-        </TemplateLayout>
+        </div>
     );
 };
 
