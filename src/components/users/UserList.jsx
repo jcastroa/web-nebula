@@ -144,11 +144,10 @@ const UserList = ({
                 {users.map((user) => (
                   <tr
                     key={user.id}
-                    className={`transition-colors ${
-                      user.is_active
-                        ? 'hover:bg-slate-50'
-                        : 'bg-red-50/30'
-                    }`}
+                    className={`transition-colors ${user.is_active
+                      ? 'hover:bg-slate-50'
+                      : 'bg-red-50/30'
+                      }`}
                   >
                     {/* Usuario */}
                     <td className="px-4 py-3">
@@ -157,7 +156,7 @@ const UserList = ({
                           <User className={`w-4 h-4 ${user.is_active ? 'text-blue-600' : 'text-slate-400'}`} />
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{user.first_name} {user.last_name}</p>
+                          <p className="font-semibold text-slate-900">{user.nombres} {user.apellidos}</p>
                           <p className="text-sm text-blue-600">@{user.username}</p>
                           <p className="text-sm text-slate-600">{user.email}</p>
                           {user.created_at && (
@@ -175,28 +174,31 @@ const UserList = ({
 
                     {/* Rol Global */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm text-slate-900">
-                          {user.rol_global_nombre || 'Sin rol global'}
-                        </span>
-                      </div>
+                      {user.rol_global_nombre ? (
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm text-slate-900">
+                            {user.rol_global_nombre}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">Sin rol global</span>
+                      )}
                     </td>
 
                     {/* Estado */}
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                        user.is_active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${user.is_active
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                        }`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
                         {user.is_active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
 
                     {/* Asignaciones */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-center">
                       {user.asignaciones && user.asignaciones.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5 justify-center">
                           {user.asignaciones.map((asig, index) => (
@@ -242,11 +244,10 @@ const UserList = ({
                         {/* Activar/Desactivar */}
                         <button
                           onClick={() => onToggleStatus(user)}
-                          className={`p-1.5 rounded transition-colors ${
-                            user.is_active
-                              ? 'text-red-600 hover:bg-red-50'
-                              : 'text-green-600 hover:bg-green-50'
-                          }`}
+                          className={`p-1.5 rounded transition-colors ${user.is_active
+                            ? 'text-red-600 hover:bg-red-50'
+                            : 'text-green-600 hover:bg-green-50'
+                            }`}
                           title={user.is_active ? 'Desactivar usuario' : 'Activar usuario'}
                         >
                           {user.is_active ? (

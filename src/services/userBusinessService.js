@@ -12,7 +12,7 @@ import api from './api';
  */
 export const createUser = async (userData) => {
   try {
-    const response = await api.post('/usuarios/', userData);
+    const response = await api.post('/users/', userData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -30,7 +30,7 @@ export const createUser = async (userData) => {
  */
 export const getUsers = async (params = {}) => {
   try {
-    const response = await api.get('/usuarios/', { params });
+    const response = await api.get('/users/', { params });
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -48,7 +48,7 @@ export const getUsers = async (params = {}) => {
  */
 export const getUserById = async (userId) => {
   try {
-    const response = await api.get(`/usuarios/${userId}/`);
+    const response = await api.get(`/users/${userId}/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -67,7 +67,7 @@ export const getUserById = async (userId) => {
  */
 export const updateUser = async (userId, userData) => {
   try {
-    const response = await api.put(`/usuarios/${userId}/`, userData);
+    const response = await api.put(`/users/${userId}`, userData);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -85,7 +85,7 @@ export const updateUser = async (userId, userData) => {
  */
 export const deactivateUser = async (userId) => {
   try {
-    const response = await api.patch(`/usuarios/${userId}/desactivar/`);
+    const response = await api.patch(`/users/${userId}/desactivar/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -103,7 +103,7 @@ export const deactivateUser = async (userId) => {
  */
 export const activateUser = async (userId) => {
   try {
-    const response = await api.patch(`/usuarios/${userId}/activar/`);
+    const response = await api.patch(`/users/${userId}/activar/`);
     return { success: true, data: response.data };
   } catch (error) {
     return {
@@ -120,8 +120,12 @@ export const activateUser = async (userId) => {
  */
 export const getBusinesses = async () => {
   try {
-    const response = await api.get('/negocios/');
-    return { success: true, data: response.data };
+    const response = await api.get('/negocios/', {
+      params: {
+        activo_only: false
+      }
+    });
+    return { success: true, data: response.data.data };
   } catch (error) {
     return {
       success: false,

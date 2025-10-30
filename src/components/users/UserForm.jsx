@@ -12,7 +12,7 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
     nombres: '',
     apellidos: '',
     email: '',
-    rol_global: ''
+    rol_global_id: ''
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
@@ -41,7 +41,7 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
         nombres: initialData.nombres || '',
         apellidos: initialData.apellidos || '',
         email: initialData.email || '',
-        rol_global: initialData.rol_global || ''
+        rol_global_id: initialData.rol_global_id || ''
       });
     }
   }, [initialData]);
@@ -60,7 +60,7 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
     }
 
     // Validar si intenta asignar rol global con asignaciones activas
-    if (name === 'rol_global' && value && activeAssignmentsCount > 0) {
+    if (name === 'rol_global_id' && value && activeAssignmentsCount > 0) {
       setGlobalRoleWarning(
         `Este usuario tiene ${activeAssignmentsCount} asignación${activeAssignmentsCount > 1 ? 'es' : ''} activa${activeAssignmentsCount > 1 ? 's' : ''}. ` +
         'Primero debe desactivar todas las asignaciones activas antes de asignar un rol global.'
@@ -94,8 +94,8 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
     }
 
     // Validar que no se asigne rol global si hay asignaciones activas
-    if (formData.rol_global && activeAssignmentsCount > 0) {
-      errors.rol_global = `No se puede asignar rol global. Primero desactive las ${activeAssignmentsCount} asignación${activeAssignmentsCount > 1 ? 'es' : ''} activa${activeAssignmentsCount > 1 ? 's' : ''}.`;
+    if (formData.rol_global_id && activeAssignmentsCount > 0) {
+      errors.rol_global_id = `No se puede asignar rol global. Primero desactive las ${activeAssignmentsCount} asignación${activeAssignmentsCount > 1 ? 'es' : ''} activa${activeAssignmentsCount > 1 ? 's' : ''}.`;
     }
 
     setFieldErrors(errors);
@@ -109,10 +109,10 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
       return;
     }
 
-    // Enviar datos, excluyendo rol_global si está vacío
+    // Enviar datos, excluyendo rol_global_id si está vacío
     const dataToSubmit = {
       ...formData,
-      rol_global: formData.rol_global || null
+      rol_global_id: formData.rol_global_id || null
     };
 
     onSubmit(dataToSubmit, setFieldErrors);
@@ -248,18 +248,18 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
               </div>
             </label>
             <select
-              name="rol_global"
-              value={formData.rol_global}
+              name="rol_global_id"
+              value={formData.rol_global_id}
               onChange={handleChange}
               disabled={isLoading}
               className={`w-full px-4 py-2.5 border rounded-lg
                 focus:outline-none focus:ring-2 focus:ring-blue-500
                 disabled:opacity-50 disabled:cursor-not-allowed
-                ${fieldErrors.rol_global ? 'border-red-300 focus:ring-red-500 bg-red-50' : 'border-slate-200'}`}
+                ${fieldErrors.rol_global_id ? 'border-red-300 focus:ring-red-500 bg-red-50' : 'border-slate-200'}`}
             >
               <option value="">Sin rol global</option>
               {roles.map(rol => (
-                <option key={rol.id} value={rol.nombre}>
+                <option key={rol.id_rol} value={rol.id_rol}>
                   {rol.nombre}
                 </option>
               ))}
@@ -267,8 +267,8 @@ const UserForm = ({ onSubmit, initialData = null, isLoading = false, showPanel =
             <p className="text-sm text-slate-500 mt-1">
               Si asignas un rol global, no podrás asignar roles específicos por negocio
             </p>
-            {fieldErrors.rol_global && (
-              <p className="text-red-600 text-sm mt-1">{fieldErrors.rol_global}</p>
+            {fieldErrors.rol_global_id && (
+              <p className="text-red-600 text-sm mt-1">{fieldErrors.rol_global_id}</p>
             )}
           </div>
         </div>

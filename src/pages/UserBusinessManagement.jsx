@@ -628,7 +628,7 @@ const UserBusinessManagement = () => {
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
                 <div>
                   <h3 className="text-xl font-bold text-slate-800 mb-4">
-                    {currentUser.first_name} {currentUser.last_name}
+                    {currentUser.nombres} {currentUser.apellidos}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2">
@@ -677,9 +677,7 @@ const UserBusinessManagement = () => {
           initialData={editingUser}
           isLoading={isSavingUser}
           activeAssignmentsCount={
-            editingUser?.asignaciones
-              ? editingUser.asignaciones.filter(a => a.estado === 'activo').length
-              : 0
+           editingUser?.asignaciones?.length || 0
           }
         />
 

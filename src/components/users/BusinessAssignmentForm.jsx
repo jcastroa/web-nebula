@@ -264,7 +264,7 @@ const BusinessAssignmentForm = ({
             >
               <option value="">Seleccione un rol</option>
               {roles.map(rol => (
-                <option key={rol.id} value={rol.id}>
+                <option key={rol.id_rol} value={rol.id_rol}>
                   {rol.nombre}
                 </option>
               ))}
