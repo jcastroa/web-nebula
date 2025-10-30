@@ -24,10 +24,20 @@ class ChatbotService {
 
     /**
      * Guarda la configuración del chatbot
+     * Envía tanto la configuración estructurada como el prompt completo generado
      */
     async guardarConfiguracion(config) {
         try {
-            const response = await api.post(`${this.baseUrl}/configuracion`, config);
+            // Generar el prompt completo antes de enviar
+            const promptCompleto = this.generarPromptCompleto(config);
+
+            // Preparar el payload con la configuración y el prompt
+            const payload = {
+                configuracion: config,
+                prompt_completo: promptCompleto
+            };
+
+            const response = await api.post(`${this.baseUrl}/configuracion`, payload);
             return {
                 success: true,
                 data: response.data,
