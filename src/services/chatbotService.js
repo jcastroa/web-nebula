@@ -1,48 +1,45 @@
+import api from './api';
+
 class ChatbotService {
     constructor() {
-        this.storageKey = 'chatbot-config';
+        this.baseUrl = '/chatbot';
     }
 
     /**
      * Obtiene la configuración del chatbot
-     * En producción, esto sería una llamada a la API
      */
     async obtenerConfiguracion() {
         try {
-            // Simular delay de API
-            await this.delay(300);
-
-            const data = localStorage.getItem(this.storageKey);
-            if (data) {
-                return JSON.parse(data);
-            }
-
-            // Retornar configuración por defecto
-            return this.getConfiguracionDefault();
+            const response = await api.get(`${this.baseUrl}/configuracion`);
+            return response.data;
         } catch (error) {
             console.error('Error al obtener configuración:', error);
-            throw error;
+            throw new Error(
+                error.response?.data?.detail ||
+                error.response?.data?.message ||
+                'Error al cargar la configuración del chatbot'
+            );
         }
     }
 
     /**
      * Guarda la configuración del chatbot
-     * En producción, esto sería una llamada POST/PUT a la API
      */
     async guardarConfiguracion(config) {
         try {
-            // Simular delay de API
-            await this.delay(500);
-
-            localStorage.setItem(this.storageKey, JSON.stringify(config));
-
+            const response = await api.post(`${this.baseUrl}/configuracion`, config);
             return {
                 success: true,
+                data: response.data,
                 message: 'Configuración guardada exitosamente'
             };
         } catch (error) {
             console.error('Error al guardar configuración:', error);
-            throw error;
+            throw new Error(
+                error.response?.data?.detail ||
+                error.response?.data?.message ||
+                'Error al guardar la configuración'
+            );
         }
     }
 
@@ -165,6 +162,7 @@ TONO Y ESTILO:
 
     /**
      * Configuración por defecto (campos vacíos)
+     * Se usa solo en el frontend si el backend no retorna datos
      */
     getConfiguracionDefault() {
         return {
@@ -185,13 +183,6 @@ TONO Y ESTILO:
             },
             preguntasFrecuentes: []
         };
-    }
-
-    /**
-     * Simula un delay de API
-     */
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
 

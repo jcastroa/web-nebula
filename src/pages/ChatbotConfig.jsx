@@ -52,8 +52,17 @@ const ChatbotConfig = () => {
             const data = await chatbotService.obtenerConfiguracion();
             setConfig(data);
         } catch (err) {
-            setError('Error al cargar la configuración del chatbot');
-            console.error(err);
+            console.error('Error al cargar configuración:', err);
+
+            // Si es un error 404 (no hay configuración guardada), usar configuración por defecto
+            if (err.message?.includes('404') || err.message?.includes('not found')) {
+                console.log('No hay configuración guardada, usando valores por defecto');
+                setConfig(chatbotService.getConfiguracionDefault());
+            } else {
+                // Para otros errores, mostrar mensaje pero también cargar valores por defecto
+                setError(err.message || 'Error al cargar la configuración del chatbot');
+                setConfig(chatbotService.getConfiguracionDefault());
+            }
         } finally {
             setLoading(false);
         }
@@ -65,13 +74,13 @@ const ChatbotConfig = () => {
             setError(null);
             setSuccessMessage(null);
 
-            await chatbotService.guardarConfiguracion(config);
+            const result = await chatbotService.guardarConfiguracion(config);
 
-            setSuccessMessage('Configuración guardada exitosamente');
+            setSuccessMessage(result.message || 'Configuración guardada exitosamente');
             setTimeout(() => setSuccessMessage(null), 5000);
         } catch (err) {
-            setError('Error al guardar la configuración');
-            console.error(err);
+            setError(err.message || 'Error al guardar la configuración');
+            console.error('Error al guardar:', err);
         } finally {
             setSaving(false);
         }
