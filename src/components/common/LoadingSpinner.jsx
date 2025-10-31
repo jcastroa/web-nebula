@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 export function LoadingSpinner({ size = 'md', text = 'Cargando...' }) {
   const sizeClasses = {
     sm: 'w-4 h-4',
-    md: 'w-6 h-6', 
+    md: 'w-6 h-6',
     lg: 'w-8 h-8'
   };
 
@@ -17,4 +17,9 @@ export function LoadingSpinner({ size = 'md', text = 'Cargando...' }) {
       </div>
     </div>
   );
+}
+
+// Spinner simple para usar en botones (sin contenedor ni texto)
+export function ButtonSpinner({ className = "w-4 h-4" }) {
+  return <Loader2 className={`${className} animate-spin`} />;
 }
