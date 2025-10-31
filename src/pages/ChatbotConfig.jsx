@@ -53,30 +53,31 @@ const ChatbotConfig = () => {
             setError(null);
             const data = await chatbotService.obtenerConfiguracion();
 
+            // Si data es null, significa que es 404 (no hay configuración guardada)
+            // Esto es NORMAL para la primera vez, no es un error
+            if (data === null) {
+                console.log('Primera configuración del chatbot - no hay datos guardados');
+                setConfig(chatbotService.getConfiguracionDefault());
+                setIsNewConfig(true);
+                return;
+            }
+
             // El servicio retorna { id, negocio_id, configuracion, ... }
             // Solo necesitamos el campo 'configuracion' para el estado
             if (data && data.configuracion) {
                 setConfig(data.configuracion);
                 setIsNewConfig(false);
             } else {
-                // Si no viene configuracion, usar valores por defecto
+                // Si no viene configuracion pero tampoco es null, usar valores por defecto
                 setConfig(chatbotService.getConfiguracionDefault());
                 setIsNewConfig(true);
             }
         } catch (err) {
-            console.error('Error al cargar configuración:', err);
-
-            // Si es un error 404 (no hay configuración guardada), usar configuración por defecto
-            if (err.message?.includes('404') || err.message?.includes('not found')) {
-                console.log('No hay configuración guardada, usando valores por defecto');
-                setConfig(chatbotService.getConfiguracionDefault());
-                setIsNewConfig(true);
-            } else {
-                // Para otros errores, mostrar mensaje pero también cargar valores por defecto
-                setError(err.message || 'Error al cargar la configuración del chatbot');
-                setConfig(chatbotService.getConfiguracionDefault());
-                setIsNewConfig(true);
-            }
+            // Solo llegamos aquí con errores REALES (500, network, etc.)
+            console.error('Error real al cargar configuración:', err);
+            setError(err.message || 'Error al cargar la configuración del chatbot');
+            setConfig(chatbotService.getConfiguracionDefault());
+            setIsNewConfig(true);
         } finally {
             setLoading(false);
         }

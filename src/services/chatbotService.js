@@ -24,6 +24,14 @@ class ChatbotService {
             return response.data;
         } catch (error) {
             console.error('Error al obtener configuración:', error);
+
+            // Si es 404, devolver null en lugar de lanzar error
+            // Esto indica que no hay configuración guardada (estado normal para primera vez)
+            if (error.response?.status === 404) {
+                return null;
+            }
+
+            // Para otros errores, sí lanzar excepción
             throw new Error(
                 error.response?.data?.detail ||
                 error.response?.data?.message ||
