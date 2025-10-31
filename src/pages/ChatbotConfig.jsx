@@ -52,8 +52,17 @@ const ChatbotConfig = () => {
             setLoading(true);
             setError(null);
             const data = await chatbotService.obtenerConfiguracion();
-            setConfig(data);
-            setIsNewConfig(false);
+
+            // El servicio retorna { id, negocio_id, configuracion, ... }
+            // Solo necesitamos el campo 'configuracion' para el estado
+            if (data && data.configuracion) {
+                setConfig(data.configuracion);
+                setIsNewConfig(false);
+            } else {
+                // Si no viene configuracion, usar valores por defecto
+                setConfig(chatbotService.getConfiguracionDefault());
+                setIsNewConfig(true);
+            }
         } catch (err) {
             console.error('Error al cargar configuración:', err);
 
