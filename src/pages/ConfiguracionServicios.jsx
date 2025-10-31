@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X, Check, AlertCircle, Search, Package, TrendingUp, Activity, Inbox } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, AlertCircle, Search, Package, TrendingUp, Activity, Inbox, CheckCircle, XCircle } from 'lucide-react';
 import api from '../services/api';
 
 const ConfiguracionServicios = () => {
@@ -345,11 +345,11 @@ const ConfiguracionServicios = () => {
                   <td className="px-6 py-4">
                     {servicio.activo ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <span className="mr-1">✅</span> Activo
+                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Activo
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        <span className="mr-1">⏸️</span> Inactivo
+                        <XCircle className="w-3.5 h-3.5 mr-1.5" /> Inactivo
                       </span>
                     )}
                   </td>
