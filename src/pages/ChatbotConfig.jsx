@@ -123,6 +123,9 @@ const ChatbotConfig = () => {
             if (errores.length > 0) {
                 setValidationErrors(errores);
                 setError('Por favor completa todos los campos obligatorios');
+
+                // Scroll automático hacia arriba para que vea los errores
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
 
@@ -130,10 +133,17 @@ const ChatbotConfig = () => {
 
             setSuccessMessage(result.message || 'Configuración guardada exitosamente');
             setIsNewConfig(false);
+
+            // Scroll automático hacia arriba para que vea el mensaje de éxito
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             setTimeout(() => setSuccessMessage(null), 5000);
         } catch (err) {
             setError(err.message || 'Error al guardar la configuración');
             console.error('Error al guardar:', err);
+
+            // Scroll automático hacia arriba para que vea el error
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } finally {
             setSaving(false);
         }
@@ -203,20 +213,20 @@ const ChatbotConfig = () => {
 
                 {/* Mensajes de validación */}
                 {validationErrors.length > 0 && (
-                    <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="mb-4 bg-amber-50 border-2 border-amber-400 rounded-lg p-4 shadow-lg animate-pulse">
                         <div className="flex items-start gap-3">
-                            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
                             <div className="flex-1">
-                                <p className="text-sm font-semibold text-amber-900 mb-2">Campos obligatorios incompletos:</p>
+                                <p className="text-sm font-bold text-amber-900 mb-2">⚠️ Campos obligatorios incompletos:</p>
                                 <ul className="list-disc list-inside space-y-1">
                                     {validationErrors.map((error, index) => (
-                                        <li key={index} className="text-sm text-amber-800">{error}</li>
+                                        <li key={index} className="text-sm text-amber-800 font-medium">{error}</li>
                                     ))}
                                 </ul>
                             </div>
                             <button
                                 onClick={() => setValidationErrors([])}
-                                className="text-amber-600 hover:text-amber-800"
+                                className="text-amber-600 hover:text-amber-800 font-bold text-xl"
                             >
                                 ×
                             </button>
@@ -226,14 +236,14 @@ const ChatbotConfig = () => {
 
                 {/* Mensajes de error/éxito */}
                 {error && (
-                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="mb-4 bg-red-50 border-2 border-red-400 rounded-lg p-4 shadow-lg animate-pulse flex items-start gap-3">
+                        <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-red-800">{error}</p>
+                            <p className="text-red-900 font-semibold">❌ {error}</p>
                         </div>
                         <button
                             onClick={() => setError(null)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 hover:text-red-800 font-bold text-xl"
                         >
                             ×
                         </button>
@@ -241,14 +251,14 @@ const ChatbotConfig = () => {
                 )}
 
                 {successMessage && (
-                    <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="mb-4 bg-green-50 border-2 border-green-400 rounded-lg p-4 shadow-lg animate-pulse flex items-start gap-3">
+                        <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-green-800">{successMessage}</p>
+                            <p className="text-green-900 font-semibold">✅ {successMessage}</p>
                         </div>
                         <button
                             onClick={() => setSuccessMessage(null)}
-                            className="text-green-600 hover:text-green-800"
+                            className="text-green-600 hover:text-green-800 font-bold text-xl"
                         >
                             ×
                         </button>
@@ -308,12 +318,12 @@ const ChatbotConfig = () => {
                     onChange={(field, value) => handleInputChange('preguntasFrecuentes', field, value)}
                 />
 
-                {/* Botones de acción inferiores */}
-                <div className="mt-6 flex gap-3 sticky bottom-4 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+                {/* Botones de acción inferiores - Flotantes y siempre visibles */}
+                <div className="mt-6 flex gap-3 sticky bottom-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl shadow-2xl border-2 border-blue-300 backdrop-blur-sm">
                     <button
                         onClick={handleGuardar}
                         disabled={saving}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all font-semibold text-base shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
                         {saving ? (
                             <>
@@ -326,6 +336,14 @@ const ChatbotConfig = () => {
                                 Guardar Configuración
                             </>
                         )}
+                    </button>
+
+                    <button
+                        onClick={() => setShowPreview(!showPreview)}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium border-2 border-gray-300 shadow-md hover:shadow-lg"
+                    >
+                        <Eye className="h-5 w-5" />
+                        Vista Previa
                     </button>
                 </div>
 
