@@ -166,7 +166,7 @@ const ConfiguracionServicios = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-6xl mx-auto p-6">
       {/* Header con búsqueda y botón */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-6">
