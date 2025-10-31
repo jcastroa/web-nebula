@@ -11,6 +11,16 @@ class ChatbotService {
     async obtenerConfiguracion() {
         try {
             const response = await api.get(`${this.baseUrl}/configuracion`);
+
+            // Normalizar nombres de campos de snake_case a camelCase
+            if (response.data && response.data.configuracion) {
+                const normalized = this.normalizarConfiguracion(response.data.configuracion);
+                return {
+                    ...response.data,
+                    configuracion: normalized
+                };
+            }
+
             return response.data;
         } catch (error) {
             console.error('Error al obtener configuración:', error);
@@ -23,6 +33,30 @@ class ChatbotService {
     }
 
     /**
+     * Normaliza la configuración de snake_case a camelCase
+     */
+    normalizarConfiguracion(config) {
+        return {
+            negocio: {
+                nombre: config.negocio?.nombre || '',
+                horario: config.negocio?.horario || '',
+                telefono: config.negocio?.telefono || '',
+                direccion: config.negocio?.direccion || '',
+                sitioWeb: config.negocio?.sitio_web || '', // snake_case → camelCase
+                email: config.negocio?.email || ''
+            },
+            servicios: {
+                especialidades: config.servicios?.especialidades || [],
+                preciosAdicionales: config.servicios?.precios_adicionales || [] // snake_case → camelCase
+            },
+            politicas: {
+                protocolos: config.politicas?.protocolos || []
+            },
+            preguntasFrecuentes: config.preguntas_frecuentes || [] // snake_case → camelCase
+        };
+    }
+
+    /**
      * Guarda la configuración del chatbot
      * Envía tanto la configuración estructurada como el prompt completo generado
      */
@@ -31,9 +65,12 @@ class ChatbotService {
             // Generar el prompt completo antes de enviar
             const promptCompleto = this.generarPromptCompleto(config);
 
+            // Convertir configuración de camelCase a snake_case para el backend
+            const configSnakeCase = this.convertirASnakeCase(config);
+
             // Preparar el payload con la configuración y el prompt
             const payload = {
-                configuracion: config,
+                configuracion: configSnakeCase,
                 prompt_completo: promptCompleto
             };
 
@@ -51,6 +88,30 @@ class ChatbotService {
                 'Error al guardar la configuración'
             );
         }
+    }
+
+    /**
+     * Convierte la configuración de camelCase a snake_case para el backend
+     */
+    convertirASnakeCase(config) {
+        return {
+            negocio: {
+                nombre: config.negocio.nombre,
+                horario: config.negocio.horario,
+                telefono: config.negocio.telefono,
+                direccion: config.negocio.direccion,
+                sitio_web: config.negocio.sitioWeb, // camelCase → snake_case
+                email: config.negocio.email
+            },
+            servicios: {
+                especialidades: config.servicios.especialidades,
+                precios_adicionales: config.servicios.preciosAdicionales // camelCase → snake_case
+            },
+            politicas: {
+                protocolos: config.politicas.protocolos
+            },
+            preguntas_frecuentes: config.preguntasFrecuentes // camelCase → snake_case
+        };
     }
 
     /**
