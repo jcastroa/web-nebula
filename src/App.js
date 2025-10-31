@@ -88,6 +88,7 @@ import TemplateLayout from './components/layout/TemplateLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
+import ChatbotConfig from './pages/ChatbotConfig';
 import UserBusinessManagement from './pages/UserBusinessManagement';
 import BusinessConfig from './pages/BusinessConfig';
 
@@ -310,6 +311,10 @@ function App() {
         />
 
         <Route
+          path="/configuracion/chatbot"
+          element={
+            <PrivateRoute>
+              <ChatbotConfig />
           path="/configuracion/usuarios"
           element={
             <PrivateRoute>
