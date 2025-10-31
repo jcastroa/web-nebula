@@ -8,7 +8,11 @@ import {
   AlertCircle,
   X,
   Check,
-  DollarSign
+  DollarSign,
+  User,
+  Hash,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import paymentMethodsService from '../services/paymentMethodsService';
 
@@ -22,11 +26,14 @@ const ConfiguracionPagos = () => {
   const [medioActual, setMedioActual] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [medioAEliminar, setMedioAEliminar] = useState(null);
+  const [expandedRows, setExpandedRows] = useState(new Set());
 
   // Estados del formulario
   const [formData, setFormData] = useState({
     descripcion: '',
-    detalle: ''
+    detalle: '',
+    nombre_titular: '',
+    numero_cuenta: ''
   });
 
   // Estados de validación
@@ -58,11 +65,27 @@ const ConfiguracionPagos = () => {
     }
   };
 
+  // Toggle expandir fila
+  const toggleExpandRow = (id) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedRows(newExpanded);
+  };
+
   // Abrir modal para agregar
   const handleAgregar = () => {
     setModoEdicion(false);
     setMedioActual(null);
-    setFormData({ descripcion: '', detalle: '' });
+    setFormData({
+      descripcion: '',
+      detalle: '',
+      nombre_titular: '',
+      numero_cuenta: ''
+    });
     setFormErrors({});
     setShowModal(true);
   };
@@ -73,7 +96,9 @@ const ConfiguracionPagos = () => {
     setMedioActual(medio);
     setFormData({
       descripcion: medio.descripcion || '',
-      detalle: medio.detalle || ''
+      detalle: medio.detalle || '',
+      nombre_titular: medio.nombre_titular || '',
+      numero_cuenta: medio.numero_cuenta || ''
     });
     setFormErrors({});
     setShowModal(true);
@@ -84,7 +109,12 @@ const ConfiguracionPagos = () => {
     setShowModal(false);
     setModoEdicion(false);
     setMedioActual(null);
-    setFormData({ descripcion: '', detalle: '' });
+    setFormData({
+      descripcion: '',
+      detalle: '',
+      nombre_titular: '',
+      numero_cuenta: ''
+    });
     setFormErrors({});
   };
 
@@ -265,10 +295,10 @@ const ConfiguracionPagos = () => {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Descripción
+                  Medio de Pago
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Detalle
+                  Información
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
@@ -276,41 +306,112 @@ const ConfiguracionPagos = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {mediosPago.map((medio) => (
-                <tr key={medio.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <span className="font-medium text-gray-900">
-                        {medio.descripcion}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    {medio.detalle}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEditar(medio)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Editar"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleAbrirModalEliminar(medio)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {mediosPago.map((medio) => {
+                const hasDetails = medio.nombre_titular || medio.numero_cuenta;
+                const isExpanded = expandedRows.has(medio.id);
+
+                return (
+                  <React.Fragment key={medio.id}>
+                    <tr className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <DollarSign className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-gray-900">
+                              {medio.descripcion}
+                            </div>
+                            <div className="text-sm text-gray-500 truncate">
+                              {medio.detalle}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {hasDetails ? (
+                          <button
+                            onClick={() => toggleExpandRow(medio.id)}
+                            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="w-4 h-4" />
+                                Ocultar detalles
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4" />
+                                Ver detalles
+                              </>
+                            )}
+                          </button>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">
+                            Sin información adicional
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEditar(medio)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleAbrirModalEliminar(medio)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && hasDetails && (
+                      <tr className="bg-blue-50">
+                        <td colSpan="3" className="px-6 py-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {medio.nombre_titular && (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <User className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-medium text-blue-900 uppercase tracking-wide">
+                                    Titular
+                                  </div>
+                                  <div className="text-sm text-blue-800 mt-1">
+                                    {medio.nombre_titular}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {medio.numero_cuenta && (
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Hash className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-medium text-blue-900 uppercase tracking-wide">
+                                    Número de Cuenta
+                                  </div>
+                                  <div className="text-sm text-blue-800 mt-1 font-mono">
+                                    {medio.numero_cuenta}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -319,9 +420,9 @@ const ConfiguracionPagos = () => {
       {/* Modal de Agregar/Editar */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             {/* Header del modal */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl">
               <h2 className="text-xl font-semibold text-gray-900">
                 {modoEdicion ? 'Editar Medio de Pago' : 'Agregar Medio de Pago'}
               </h2>
@@ -334,57 +435,121 @@ const ConfiguracionPagos = () => {
             </div>
 
             {/* Contenido del modal */}
-            <div className="p-6 space-y-4">
-              {/* Campo Descripción */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Efectivo, Yape, Plin, Tarjeta"
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    formErrors.descripcion
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                />
-                {formErrors.descripcion && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.descripcion}</p>
-                )}
+            <div className="p-6 space-y-5">
+              {/* Campos obligatorios */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-px bg-gray-200 flex-1"></div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Información Básica
+                  </span>
+                  <div className="h-px bg-gray-200 flex-1"></div>
+                </div>
+
+                {/* Campo Descripción */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Efectivo, Yape, Plin, Transferencia Bancaria"
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                      formErrors.descripcion
+                        ? 'border-red-300 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                  />
+                  {formErrors.descripcion && (
+                    <p className="mt-1.5 text-sm text-red-600">{formErrors.descripcion}</p>
+                  )}
+                </div>
+
+                {/* Campo Detalle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción General <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="detalle"
+                    value={formData.detalle}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Pago en efectivo al momento de la cita"
+                    rows="3"
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 resize-none transition-all ${
+                      formErrors.detalle
+                        ? 'border-red-300 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                  />
+                  {formErrors.detalle && (
+                    <p className="mt-1.5 text-sm text-red-600">{formErrors.detalle}</p>
+                  )}
+                </div>
               </div>
 
-              {/* Campo Detalle */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Detalle <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="detalle"
-                  value={formData.detalle}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Pago en efectivo al momento de la cita"
-                  rows="3"
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 resize-none ${
-                    formErrors.detalle
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
-                />
-                {formErrors.detalle && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.detalle}</p>
-                )}
+              {/* Campos opcionales */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-px bg-gray-200 flex-1"></div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Información Adicional (Opcional)
+                  </span>
+                  <div className="h-px bg-gray-200 flex-1"></div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                  <p className="text-xs text-blue-800 mb-3">
+                    Agrega información adicional como nombre del titular y número de cuenta para medios de pago digitales o transferencias bancarias.
+                  </p>
+
+                  {/* Campo Nombre del Titular */}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-500" />
+                        Nombre del Titular
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="nombre_titular"
+                      value={formData.nombre_titular}
+                      onChange={handleInputChange}
+                      placeholder="Ej: Juan Pérez García"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+
+                  {/* Campo Número de Cuenta */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Hash className="w-4 h-4 text-gray-500" />
+                        Número de Cuenta / Teléfono
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="numero_cuenta"
+                      value={formData.numero_cuenta}
+                      onChange={handleInputChange}
+                      placeholder="Ej: 987654321 o 0011-2233-4455-6677"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Footer del modal */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl sticky bottom-0">
               <button
                 onClick={handleCerrarModal}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 disabled={isSubmitting}
               >
                 Cancelar
@@ -392,7 +557,7 @@ const ConfiguracionPagos = () => {
               <button
                 onClick={handleGuardar}
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 {isSubmitting ? (
                   <>
@@ -414,18 +579,18 @@ const ConfiguracionPagos = () => {
       {/* Modal de Confirmación de Eliminación */}
       {showDeleteModal && medioAEliminar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            {/* Header del modal */}
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            {/* Contenido del modal */}
             <div className="p-6">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-6 h-6 text-red-600" />
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-7 h-7 text-red-600" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
                 Confirmar Eliminación
               </h2>
               <p className="text-gray-600 text-center">
                 ¿Estás seguro de que deseas eliminar el medio de pago{' '}
-                <span className="font-semibold">{medioAEliminar.descripcion}</span>?
+                <span className="font-semibold text-gray-900">{medioAEliminar.descripcion}</span>?
               </p>
               <p className="text-sm text-gray-500 text-center mt-2">
                 Esta acción no se puede deshacer.
@@ -433,10 +598,10 @@ const ConfiguracionPagos = () => {
             </div>
 
             {/* Footer del modal */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
               <button
                 onClick={handleCerrarModalEliminar}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 disabled={isSubmitting}
               >
                 Cancelar
@@ -444,7 +609,7 @@ const ConfiguracionPagos = () => {
               <button
                 onClick={handleEliminar}
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 {isSubmitting ? (
                   <>
