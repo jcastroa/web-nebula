@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X, Check, AlertCircle, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, AlertCircle, Search, Package, TrendingUp, Activity, Inbox } from 'lucide-react';
 import api from '../services/api';
 
 const ConfiguracionServicios = () => {
@@ -162,77 +162,142 @@ const ConfiguracionServicios = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Header */}
+      {/* Header con búsqueda y botón */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Configuración de Servicios</h2>
-        <p className="text-gray-600">Gestiona los servicios que ofreces y sus tarifas</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Configuración de Servicios</h2>
+            <p className="text-gray-600">Gestiona los servicios que ofreces y sus tarifas</p>
+          </div>
+          <button
+            onClick={handleCreate}
+            className="flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Nuevo Servicio
+          </button>
+        </div>
+
+        {/* Barra de búsqueda */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar servicios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
+          />
+        </div>
       </div>
 
       {/* Mensajes de éxito */}
       {successMessage && (
-        <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
-          <Check className="w-5 h-5 text-green-600 mr-3" />
+        <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center animate-in fade-in slide-in-from-top-2 duration-300">
+          <Check className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
           <span className="text-green-800">{successMessage}</span>
         </div>
       )}
 
       {/* Mensajes de error */}
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
-          <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
-          <span className="text-red-800">{error}</span>
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center animate-in fade-in slide-in-from-top-2 duration-300">
+          <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0" />
+          <span className="text-red-800 flex-1">{error}</span>
           <button
             onClick={() => setError(null)}
-            className="ml-auto text-red-600 hover:text-red-800"
+            className="ml-3 text-red-600 hover:text-red-800 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Filtros y acciones */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar servicios..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+      {/* Estadísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-600 mb-1">Total Servicios</p>
+              <p className="text-3xl font-bold text-blue-900">{servicios.length}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+              <Package className="w-6 h-6 text-white" />
             </div>
           </div>
-          <button
-            onClick={handleCreate}
-            className="ml-4 flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Nuevo Servicio
-          </button>
+        </div>
+
+        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-600 mb-1">Servicios Activos</p>
+              <p className="text-3xl font-bold text-green-900">
+                {servicios.filter(s => s.activo).length}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+              <Activity className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-purple-600 mb-1">Precio Promedio</p>
+              <p className="text-3xl font-bold text-purple-900">
+                S/ {servicios.length > 0
+                  ? (servicios.reduce((sum, s) => sum + parseFloat(s.precio), 0) / servicios.length).toFixed(2)
+                  : '0.00'}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Tabla de servicios */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-gray-600">Cargando servicios...</p>
+          <div className="p-12 text-center">
+            <div className="inline-block w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-600 font-medium">Cargando servicios...</p>
           </div>
         ) : filteredServicios.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-600">
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              {searchTerm ? (
+                <Search className="w-8 h-8 text-gray-400" />
+              ) : (
+                <Inbox className="w-8 h-8 text-gray-400" />
+              )}
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
               {searchTerm ? 'No se encontraron servicios' : 'No hay servicios configurados'}
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              {searchTerm
+                ? 'Intenta con otro término de búsqueda o limpia el filtro para ver todos los servicios.'
+                : 'Comienza creando tu primer servicio para gestionar las tarifas de tu consultorio.'}
             </p>
             {!searchTerm && (
               <button
                 onClick={handleCreate}
-                className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
               >
+                <Plus className="w-5 h-5 mr-2" />
                 Crear primer servicio
+              </button>
+            )}
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Limpiar búsqueda
               </button>
             )}
           </div>
@@ -310,28 +375,6 @@ const ConfiguracionServicios = () => {
             </tbody>
           </table>
         )}
-      </div>
-
-      {/* Estadísticas */}
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Total Servicios</p>
-          <p className="text-2xl font-bold text-gray-900">{servicios.length}</p>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Servicios Activos</p>
-          <p className="text-2xl font-bold text-green-600">
-            {servicios.filter(s => s.activo).length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm text-gray-600">Precio Promedio</p>
-          <p className="text-2xl font-bold text-blue-600">
-            S/ {servicios.length > 0
-              ? (servicios.reduce((sum, s) => sum + parseFloat(s.precio), 0) / servicios.length).toFixed(2)
-              : '0.00'}
-          </p>
-        </div>
       </div>
 
       {/* Modal para crear/editar */}
