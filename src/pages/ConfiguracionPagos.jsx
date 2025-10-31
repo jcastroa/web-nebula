@@ -420,9 +420,9 @@ const ConfiguracionPagos = () => {
       {/* Modal de Agregar/Editar */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header del modal */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white flex-shrink-0">
               <h2 className="text-xl font-semibold text-gray-900">
                 {modoEdicion ? 'Editar Medio de Pago' : 'Agregar Medio de Pago'}
               </h2>
@@ -434,8 +434,8 @@ const ConfiguracionPagos = () => {
               </button>
             </div>
 
-            {/* Contenido del modal */}
-            <div className="p-6 space-y-5">
+            {/* Contenido del modal con scroll */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
               {/* Campos obligatorios */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -546,7 +546,7 @@ const ConfiguracionPagos = () => {
             </div>
 
             {/* Footer del modal */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl sticky bottom-0">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
               <button
                 onClick={handleCerrarModal}
                 className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
@@ -579,7 +579,7 @@ const ConfiguracionPagos = () => {
       {/* Modal de Confirmación de Eliminación */}
       {showDeleteModal && medioAEliminar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
             {/* Contenido del modal */}
             <div className="p-6">
               <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -598,7 +598,7 @@ const ConfiguracionPagos = () => {
             </div>
 
             {/* Footer del modal */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={handleCerrarModalEliminar}
                 className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
