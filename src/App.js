@@ -311,19 +311,32 @@ function App() {
           }
         />
 
-        <Route
+         <Route
           path="/configuracion/servicios"
           element={
             <PrivateRoute>
               <ConfiguracionServicios />
+            </PrivateRoute>
+          }
+        />  
+
+         <Route
           path="/configuracion/chatbot"
           element={
             <PrivateRoute>
               <ChatbotConfig />
+            </PrivateRoute>
+          }
+        />  
+          <Route
           path="/configuracion/usuarios"
           element={
             <PrivateRoute>
               <UserBusinessManagement />
+            </PrivateRoute>
+          }
+        />  
+          <Route
           path="/configuracion/negocios"
           element={
             <PrivateRoute>
