@@ -23,26 +23,39 @@ Content-Type: application/json
 
 **Respuesta Exitosa (200 OK):**
 ```json
-[
-  {
-    "id": 1,
-    "descripcion": "Yape",
-    "detalle": "Pago mediante aplicación Yape",
-    "nombre_titular": "Juan Pérez García",
-    "numero_cuenta": "987654321",
-    "created_at": "2024-01-15T10:30:00Z",
-    "updated_at": "2024-01-15T10:30:00Z"
-  },
-  {
-    "id": 2,
-    "descripcion": "Efectivo",
-    "detalle": "Pago en efectivo al momento de la cita",
-    "nombre_titular": null,
-    "numero_cuenta": null,
-    "created_at": "2024-01-15T10:35:00Z",
-    "updated_at": "2024-01-15T10:35:00Z"
-  }
-]
+{
+  "medios_pago": [
+    {
+      "id": 1,
+      "descripcion": "Yape",
+      "detalle": "Pago mediante aplicación Yape",
+      "nombre_titular": "Juan Pérez García",
+      "numero_cuenta": "987654321",
+      "activo": true,
+      "eliminado": false,
+      "negocio_id": 123,
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2024-01-15T10:30:00",
+      "updated_at": "2024-01-15T10:30:00"
+    },
+    {
+      "id": 2,
+      "descripcion": "Efectivo",
+      "detalle": "Pago en efectivo al momento de la cita",
+      "nombre_titular": null,
+      "numero_cuenta": null,
+      "activo": true,
+      "eliminado": false,
+      "negocio_id": 123,
+      "created_by": 1,
+      "updated_by": 1,
+      "created_at": "2024-01-15T10:35:00",
+      "updated_at": "2024-01-15T10:35:00"
+    }
+  ],
+  "total": 2
+}
 ```
 
 **Respuesta de Error (401 Unauthorized):**
@@ -90,8 +103,13 @@ Content-Type: application/json
   "detalle": "Pago mediante aplicación Plin",
   "nombre_titular": "María López Sánchez",
   "numero_cuenta": "912345678",
-  "created_at": "2024-01-15T11:00:00Z",
-  "updated_at": "2024-01-15T11:00:00Z"
+  "activo": true,
+  "eliminado": false,
+  "negocio_id": 123,
+  "created_by": 1,
+  "updated_by": 1,
+  "created_at": "2024-01-15T11:00:00",
+  "updated_at": "2024-01-15T11:00:00"
 }
 ```
 
@@ -156,8 +174,13 @@ Content-Type: application/json
   "detalle": "Transferencia a cuenta corriente BCP",
   "nombre_titular": "Clínica Dental Lima SAC",
   "numero_cuenta": "0011-2233-4455-6677",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T12:00:00Z"
+  "activo": true,
+  "eliminado": false,
+  "negocio_id": 123,
+  "created_by": 1,
+  "updated_by": 1,
+  "created_at": "2024-01-15T10:30:00",
+  "updated_at": "2024-01-15T12:00:00"
 }
 ```
 
@@ -226,12 +249,21 @@ Authorization: Bearer {token}
 | detalle | TEXT | Sí | Descripción general |
 | nombre_titular | VARCHAR(200) | No | Nombre del titular |
 | numero_cuenta | VARCHAR(100) | No | Número de cuenta/teléfono |
+| activo | BOOLEAN | Sí | Indica si el medio de pago está activo |
+| eliminado | BOOLEAN | Sí | Soft delete flag |
+| negocio_id | INTEGER | Sí (FK) | ID del negocio al que pertenece |
+| created_by | INTEGER | Sí (FK) | ID del usuario que creó el registro |
+| updated_by | INTEGER | No (FK) | ID del último usuario que actualizó |
 | created_at | TIMESTAMP | Sí | Fecha de creación |
 | updated_at | TIMESTAMP | Sí | Fecha de última actualización |
 
 ### Índices Sugeridos
 - PRIMARY KEY (id)
 - INDEX idx_descripcion (descripcion)
+- INDEX idx_negocio_activo (negocio_id, activo, eliminado)
+- FOREIGN KEY (negocio_id) REFERENCES negocios(id)
+- FOREIGN KEY (created_by) REFERENCES usuarios(id)
+- FOREIGN KEY (updated_by) REFERENCES usuarios(id)
 
 ---
 
@@ -285,13 +317,22 @@ from .auth import get_current_user
 router = APIRouter(prefix="/api/v1/medios-pago", tags=["medios-pago"])
 
 # GET /api/v1/medios-pago
-@router.get("/", response_model=List[schemas.MedioPago])
+@router.get("/", response_model=schemas.MedioPagoListResponse)
 def listar_medios_pago(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    medios = db.query(models.MedioPago).all()
-    return medios
+    # Filtrar por negocio del usuario, activos y no eliminados
+    medios = db.query(models.MedioPago).filter(
+        models.MedioPago.negocio_id == current_user.negocio_id,
+        models.MedioPago.activo == True,
+        models.MedioPago.eliminado == False
+    ).all()
+
+    return {
+        "medios_pago": medios,
+        "total": len(medios)
+    }
 
 # POST /api/v1/medios-pago
 @router.post("/", response_model=schemas.MedioPago, status_code=201)
@@ -300,7 +341,14 @@ def crear_medio_pago(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    db_medio = models.MedioPago(**medio.dict())
+    # Crear medio de pago con campos adicionales
+    db_medio = models.MedioPago(
+        **medio.dict(),
+        negocio_id=current_user.negocio_id,
+        created_by=current_user.id,
+        activo=True,
+        eliminado=False
+    )
     db.add(db_medio)
     db.commit()
     db.refresh(db_medio)
@@ -314,12 +362,21 @@ def actualizar_medio_pago(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    db_medio = db.query(models.MedioPago).filter(models.MedioPago.id == id).first()
+    db_medio = db.query(models.MedioPago).filter(
+        models.MedioPago.id == id,
+        models.MedioPago.negocio_id == current_user.negocio_id,
+        models.MedioPago.eliminado == False
+    ).first()
+
     if not db_medio:
         raise HTTPException(status_code=404, detail="Medio de pago no encontrado")
 
+    # Actualizar campos
     for key, value in medio.dict(exclude_unset=True).items():
         setattr(db_medio, key, value)
+
+    # Actualizar metadata
+    db_medio.updated_by = current_user.id
 
     db.commit()
     db.refresh(db_medio)
@@ -332,11 +389,20 @@ def eliminar_medio_pago(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    db_medio = db.query(models.MedioPago).filter(models.MedioPago.id == id).first()
+    db_medio = db.query(models.MedioPago).filter(
+        models.MedioPago.id == id,
+        models.MedioPago.negocio_id == current_user.negocio_id,
+        models.MedioPago.eliminado == False
+    ).first()
+
     if not db_medio:
         raise HTTPException(status_code=404, detail="Medio de pago no encontrado")
 
-    db.delete(db_medio)
+    # Soft delete - marcar como eliminado
+    db_medio.eliminado = True
+    db_medio.activo = False
+    db_medio.updated_by = current_user.id
+
     db.commit()
     return {"message": "Medio de pago eliminado exitosamente", "id": id}
 ```
@@ -346,7 +412,7 @@ def eliminar_medio_pago(
 ```python
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class MedioPagoBase(BaseModel):
     descripcion: str
@@ -362,18 +428,28 @@ class MedioPagoUpdate(MedioPagoBase):
 
 class MedioPago(MedioPagoBase):
     id: int
+    activo: bool
+    eliminado: bool
+    negocio_id: int
+    created_by: int
+    updated_by: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
+
+class MedioPagoListResponse(BaseModel):
+    medios_pago: List[MedioPago]
+    total: int
 ```
 
 ### Model (SQLAlchemy)
 
 ```python
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from .database import Base
 
 class MedioPago(Base):
@@ -384,8 +460,21 @@ class MedioPago(Base):
     detalle = Column(Text, nullable=False)
     nombre_titular = Column(String(200), nullable=True)
     numero_cuenta = Column(String(100), nullable=True)
+    activo = Column(Boolean, default=True, nullable=False)
+    eliminado = Column(Boolean, default=False, nullable=False)
+
+    # Relaciones y metadata
+    negocio_id = Column(Integer, ForeignKey("negocios.id"), nullable=False)
+    created_by = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    updated_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+    # Relaciones opcionales (si es necesario cargar objetos relacionados)
+    # negocio = relationship("Negocio")
+    # creator = relationship("Usuario", foreign_keys=[created_by])
+    # updater = relationship("Usuario", foreign_keys=[updated_by])
 ```
 
 ---

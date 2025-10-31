@@ -8,7 +8,8 @@ const paymentMethodsService = {
       const response = await api.get('/medios-pago');
       return {
         success: true,
-        data: response.data
+        data: response.data.medios_pago || [],
+        total: response.data.total || 0
       };
     } catch (error) {
       console.error('Error al listar medios de pago:', error);

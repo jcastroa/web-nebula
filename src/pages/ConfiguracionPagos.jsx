@@ -54,7 +54,11 @@ const ConfiguracionPagos = () => {
       const result = await paymentMethodsService.listar();
 
       if (result.success) {
-        setMediosPago(result.data || []);
+        // Filtrar solo medios de pago activos y no eliminados
+        const mediosActivos = (result.data || []).filter(
+          medio => medio.activo && !medio.eliminado
+        );
+        setMediosPago(mediosActivos);
       } else {
         setError(result.error);
       }
