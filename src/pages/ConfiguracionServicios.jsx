@@ -29,7 +29,8 @@ const ConfiguracionServicios = () => {
       setLoading(true);
       setError(null);
       const response = await api.get('/configuracion/servicios/');
-      setServicios(response.data);
+      // El endpoint devuelve { servicios: [], total: 0 }
+      setServicios(response.data.servicios || []);
     } catch (err) {
       console.error('Error cargando servicios:', err);
       setError('Error al cargar los servicios. Por favor intenta nuevamente.');
