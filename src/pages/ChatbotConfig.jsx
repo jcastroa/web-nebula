@@ -24,6 +24,9 @@ const ChatbotConfig = () => {
     const [isNewConfig, setIsNewConfig] = useState(false);
     const [validationErrors, setValidationErrors] = useState([]);
 
+    // Ref para hacer scroll al área de mensajes
+    const messagesRef = React.useRef(null);
+
     const [config, setConfig] = useState({
         negocio: {
             nombre: '',
@@ -112,6 +115,17 @@ const ChatbotConfig = () => {
         return errores;
     };
 
+    const scrollToMessages = () => {
+        // Intentar múltiples métodos para asegurar que el scroll funcione
+        if (messagesRef.current) {
+            messagesRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        // Fallback: scroll del window
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
+    };
+
     const handleGuardar = async () => {
         try {
             setSaving(true);
@@ -124,9 +138,10 @@ const ChatbotConfig = () => {
             if (errores.length > 0) {
                 setValidationErrors(errores);
                 setError('Por favor completa todos los campos obligatorios');
+                setSaving(false);
 
                 // Scroll automático hacia arriba para que vea los errores
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollToMessages();
                 return;
             }
 
@@ -136,7 +151,7 @@ const ChatbotConfig = () => {
             setIsNewConfig(false);
 
             // Scroll automático hacia arriba para que vea el mensaje de éxito
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            scrollToMessages();
 
             setTimeout(() => setSuccessMessage(null), 5000);
         } catch (err) {
@@ -144,7 +159,7 @@ const ChatbotConfig = () => {
             console.error('Error al guardar:', err);
 
             // Scroll automático hacia arriba para que vea el error
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            scrollToMessages();
         } finally {
             setSaving(false);
         }
@@ -183,7 +198,7 @@ const ChatbotConfig = () => {
     return (
         <div className="p-6 max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="mb-6">
+                <div className="mb-6" ref={messagesRef}>
                     <div className="flex items-center gap-3 mb-2">
                         <Bot className="h-8 w-8 text-blue-600" />
                         <h1 className="text-2xl font-bold text-gray-800">Configuración del Chatbot</h1>
@@ -214,20 +229,20 @@ const ChatbotConfig = () => {
 
                 {/* Mensajes de validación */}
                 {validationErrors.length > 0 && (
-                    <div className="mb-4 bg-amber-50 border-2 border-amber-400 rounded-lg p-4 shadow-lg animate-pulse">
+                    <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
                         <div className="flex items-start gap-3">
-                            <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                             <div className="flex-1">
-                                <p className="text-sm font-bold text-amber-900 mb-2">⚠️ Campos obligatorios incompletos:</p>
+                                <p className="text-sm font-semibold text-amber-900 mb-2">Campos obligatorios incompletos:</p>
                                 <ul className="list-disc list-inside space-y-1">
                                     {validationErrors.map((error, index) => (
-                                        <li key={index} className="text-sm text-amber-800 font-medium">{error}</li>
+                                        <li key={index} className="text-sm text-amber-800">{error}</li>
                                     ))}
                                 </ul>
                             </div>
                             <button
                                 onClick={() => setValidationErrors([])}
-                                className="text-amber-600 hover:text-amber-800 font-bold text-xl"
+                                className="text-amber-600 hover:text-amber-800"
                             >
                                 ×
                             </button>
@@ -237,14 +252,14 @@ const ChatbotConfig = () => {
 
                 {/* Mensajes de error/éxito */}
                 {error && (
-                    <div className="mb-4 bg-red-50 border-2 border-red-400 rounded-lg p-4 shadow-lg animate-pulse flex items-start gap-3">
-                        <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-red-900 font-semibold">❌ {error}</p>
+                            <p className="text-red-800">{error}</p>
                         </div>
                         <button
                             onClick={() => setError(null)}
-                            className="text-red-600 hover:text-red-800 font-bold text-xl"
+                            className="text-red-600 hover:text-red-800"
                         >
                             ×
                         </button>
@@ -252,14 +267,14 @@ const ChatbotConfig = () => {
                 )}
 
                 {successMessage && (
-                    <div className="mb-4 bg-green-50 border-2 border-green-400 rounded-lg p-4 shadow-lg animate-pulse flex items-start gap-3">
-                        <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                            <p className="text-green-900 font-semibold">✅ {successMessage}</p>
+                            <p className="text-green-800">{successMessage}</p>
                         </div>
                         <button
                             onClick={() => setSuccessMessage(null)}
-                            className="text-green-600 hover:text-green-800 font-bold text-xl"
+                            className="text-green-600 hover:text-green-800"
                         >
                             ×
                         </button>
