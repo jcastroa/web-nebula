@@ -11,6 +11,7 @@ const ConfiguracionServicios = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentServicio, setCurrentServicio] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -134,6 +135,7 @@ const ConfiguracionServicios = () => {
   // Eliminar servicio
   const handleDelete = async (servicioId) => {
     try {
+      setDeleting(true);
       setError(null);
       await api.delete(`/configuracion/servicios/${servicioId}/`);
       setSuccessMessage('Servicio eliminado exitosamente');
@@ -150,6 +152,8 @@ const ConfiguracionServicios = () => {
     } catch (err) {
       console.error('Error eliminando servicio:', err);
       setError(err.response?.data?.message || 'Error al eliminar el servicio');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -526,15 +530,24 @@ const ConfiguracionServicios = () => {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={deleting}
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm.id)}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  disabled={deleting}
                 >
-                  Eliminar
+                  {deleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Eliminando...
+                    </>
+                  ) : (
+                    'Eliminar'
+                  )}
                 </button>
               </div>
             </div>
