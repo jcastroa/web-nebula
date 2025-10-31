@@ -21,6 +21,7 @@ const ConfiguracionPagos = () => {
   const [mediosPago, setMediosPago] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [medioActual, setMedioActual] = useState(null);
@@ -44,6 +45,16 @@ const ConfiguracionPagos = () => {
   useEffect(() => {
     cargarMediosPago();
   }, []);
+
+  // Limpiar mensaje de éxito después de 5 segundos
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   // Función para cargar medios de pago
   const cargarMediosPago = async () => {
@@ -176,6 +187,8 @@ const ConfiguracionPagos = () => {
       }
 
       if (result.success) {
+        // Mostrar mensaje de éxito
+        setSuccessMessage(result.message);
         // Recargar lista
         await cargarMediosPago();
         handleCerrarModal();
@@ -212,6 +225,8 @@ const ConfiguracionPagos = () => {
       const result = await paymentMethodsService.eliminar(medioAEliminar.id);
 
       if (result.success) {
+        // Mostrar mensaje de éxito
+        setSuccessMessage(result.message);
         // Recargar lista
         await cargarMediosPago();
         handleCerrarModalEliminar();
@@ -249,6 +264,24 @@ const ConfiguracionPagos = () => {
           </button>
         </div>
       </div>
+
+      {/* Mensaje de éxito */}
+      {successMessage && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-green-800 font-medium">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-500 hover:text-green-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mensaje de error global */}
       {error && (

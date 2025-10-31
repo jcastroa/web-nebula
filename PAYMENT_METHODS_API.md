@@ -98,18 +98,22 @@ Content-Type: application/json
 **Respuesta Exitosa (201 Created):**
 ```json
 {
-  "id": 3,
-  "descripcion": "Plin",
-  "detalle": "Pago mediante aplicación Plin",
-  "nombre_titular": "María López Sánchez",
-  "numero_cuenta": "912345678",
-  "activo": true,
-  "eliminado": false,
-  "negocio_id": 123,
-  "created_by": 1,
-  "updated_by": 1,
-  "created_at": "2024-01-15T11:00:00",
-  "updated_at": "2024-01-15T11:00:00"
+  "success": true,
+  "message": "Medio de pago guardado exitosamente",
+  "data": {
+    "id": 3,
+    "descripcion": "Plin",
+    "detalle": "Pago mediante aplicación Plin",
+    "nombre_titular": "María López Sánchez",
+    "numero_cuenta": "912345678",
+    "activo": true,
+    "eliminado": false,
+    "negocio_id": 123,
+    "created_by": 1,
+    "updated_by": 1,
+    "created_at": "2024-01-15T11:00:00",
+    "updated_at": "2024-01-15T11:00:00"
+  }
 }
 ```
 
@@ -169,18 +173,22 @@ Content-Type: application/json
 **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "id": 1,
-  "descripcion": "Transferencia Bancaria BCP",
-  "detalle": "Transferencia a cuenta corriente BCP",
-  "nombre_titular": "Clínica Dental Lima SAC",
-  "numero_cuenta": "0011-2233-4455-6677",
-  "activo": true,
-  "eliminado": false,
-  "negocio_id": 123,
-  "created_by": 1,
-  "updated_by": 1,
-  "created_at": "2024-01-15T10:30:00",
-  "updated_at": "2024-01-15T12:00:00"
+  "success": true,
+  "message": "Medio de pago actualizado exitosamente",
+  "data": {
+    "id": 1,
+    "descripcion": "Transferencia Bancaria BCP",
+    "detalle": "Transferencia a cuenta corriente BCP",
+    "nombre_titular": "Clínica Dental Lima SAC",
+    "numero_cuenta": "0011-2233-4455-6677",
+    "activo": true,
+    "eliminado": false,
+    "negocio_id": 123,
+    "created_by": 1,
+    "updated_by": 1,
+    "created_at": "2024-01-15T10:30:00",
+    "updated_at": "2024-01-15T12:00:00"
+  }
 }
 ```
 
@@ -217,8 +225,8 @@ Authorization: Bearer {token}
 **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "message": "Medio de pago eliminado exitosamente",
-  "id": 1
+  "success": true,
+  "message": "Medio de pago eliminado exitosamente"
 }
 ```
 
@@ -335,7 +343,7 @@ def listar_medios_pago(
     }
 
 # POST /api/v1/medios-pago
-@router.post("/", response_model=schemas.MedioPago, status_code=201)
+@router.post("/", status_code=201)
 def crear_medio_pago(
     medio: schemas.MedioPagoCreate,
     db: Session = Depends(get_db),
@@ -352,10 +360,15 @@ def crear_medio_pago(
     db.add(db_medio)
     db.commit()
     db.refresh(db_medio)
-    return db_medio
+
+    return {
+        "success": True,
+        "message": "Medio de pago guardado exitosamente",
+        "data": db_medio
+    }
 
 # PUT /api/v1/medios-pago/{id}
-@router.put("/{id}", response_model=schemas.MedioPago)
+@router.put("/{id}")
 def actualizar_medio_pago(
     id: int,
     medio: schemas.MedioPagoUpdate,
@@ -380,7 +393,12 @@ def actualizar_medio_pago(
 
     db.commit()
     db.refresh(db_medio)
-    return db_medio
+
+    return {
+        "success": True,
+        "message": "Medio de pago actualizado exitosamente",
+        "data": db_medio
+    }
 
 # DELETE /api/v1/medios-pago/{id}
 @router.delete("/{id}")
@@ -404,7 +422,11 @@ def eliminar_medio_pago(
     db_medio.updated_by = current_user.id
 
     db.commit()
-    return {"message": "Medio de pago eliminado exitosamente", "id": id}
+
+    return {
+        "success": True,
+        "message": "Medio de pago eliminado exitosamente"
+    }
 ```
 
 ### Schemas (Pydantic)

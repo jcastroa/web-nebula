@@ -25,14 +25,15 @@ const paymentMethodsService = {
     try {
       const response = await api.post('/medios-pago', data);
       return {
-        success: true,
-        data: response.data
+        success: response.data.success || true,
+        data: response.data.data,
+        message: response.data.message || 'Medio de pago creado exitosamente'
       };
     } catch (error) {
       console.error('Error al crear medio de pago:', error);
       return {
         success: false,
-        error: error.response?.data?.detail || 'Error al crear medio de pago'
+        error: error.response?.data?.detail || error.response?.data?.message || 'Error al crear medio de pago'
       };
     }
   },
@@ -42,14 +43,15 @@ const paymentMethodsService = {
     try {
       const response = await api.put(`/medios-pago/${id}`, data);
       return {
-        success: true,
-        data: response.data
+        success: response.data.success || true,
+        data: response.data.data,
+        message: response.data.message || 'Medio de pago actualizado exitosamente'
       };
     } catch (error) {
       console.error('Error al actualizar medio de pago:', error);
       return {
         success: false,
-        error: error.response?.data?.detail || 'Error al actualizar medio de pago'
+        error: error.response?.data?.detail || error.response?.data?.message || 'Error al actualizar medio de pago'
       };
     }
   },
@@ -59,14 +61,14 @@ const paymentMethodsService = {
     try {
       const response = await api.delete(`/medios-pago/${id}`);
       return {
-        success: true,
-        data: response.data
+        success: response.data.success || true,
+        message: response.data.message || 'Medio de pago eliminado exitosamente'
       };
     } catch (error) {
       console.error('Error al eliminar medio de pago:', error);
       return {
         success: false,
-        error: error.response?.data?.detail || 'Error al eliminar medio de pago'
+        error: error.response?.data?.detail || error.response?.data?.message || 'Error al eliminar medio de pago'
       };
     }
   }
