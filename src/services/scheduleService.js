@@ -9,7 +9,7 @@ class ScheduleService {
   // Obtener configuración de horarios
   async getScheduleConfig() {
     try {
-      const response = await api.get(this.baseUrl);
+      const response = await api.get(`${this.baseUrl}/`);
       return {
         success: true,
         data: response.data
@@ -25,7 +25,7 @@ class ScheduleService {
   // Guardar configuración de horarios
   async saveScheduleConfig(scheduleData) {
     try {
-      const response = await api.post(this.baseUrl, scheduleData);
+      const response = await api.post(`${this.baseUrl}/`, scheduleData);
       return {
         success: true,
         data: response.data
