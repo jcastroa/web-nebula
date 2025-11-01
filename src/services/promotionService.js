@@ -34,7 +34,8 @@ class PromotionService {
             const response = await api.post(this.baseUrl, promocion);
             return {
                 success: true,
-                data: response.data
+                data: response.data.data,
+                message: response.data.message || 'Promoción creada exitosamente'
             };
         } catch (error) {
             return {
@@ -55,7 +56,8 @@ class PromotionService {
             const response = await api.put(`${this.baseUrl}${id}/`, promocion);
             return {
                 success: true,
-                data: response.data
+                data: response.data.data,
+                message: response.data.message || 'Promoción actualizada exitosamente'
             };
         } catch (error) {
             return {
@@ -75,7 +77,7 @@ class PromotionService {
             const response = await api.delete(`${this.baseUrl}${id}/`);
             return {
                 success: true,
-                data: response.data
+                message: response.data.message || 'Promoción eliminada exitosamente'
             };
         } catch (error) {
             return {

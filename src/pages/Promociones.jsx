@@ -7,6 +7,7 @@ export default function Promociones() {
   const [promociones, setPromociones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingPromocion, setEditingPromocion] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,6 +147,8 @@ export default function Promociones() {
     }
 
     setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
     try {
       let result;
       if (editingPromocion) {
@@ -155,8 +158,11 @@ export default function Promociones() {
       }
 
       if (result.success) {
+        setSuccessMessage(result.message);
         handleCloseModal();
         await cargarPromociones();
+        // Auto-ocultar mensaje después de 5 segundos
+        setTimeout(() => setSuccessMessage(null), 5000);
       } else {
         setError(result.error);
       }
@@ -175,11 +181,16 @@ export default function Promociones() {
     if (!deleteConfirm) return;
 
     setIsSubmitting(true);
+    setError(null);
+    setSuccessMessage(null);
     try {
       const result = await promotionService.eliminarPromocion(deleteConfirm.id);
       if (result.success) {
+        setSuccessMessage(result.message);
         setDeleteConfirm(null);
         await cargarPromociones();
+        // Auto-ocultar mensaje después de 5 segundos
+        setTimeout(() => setSuccessMessage(null), 5000);
       } else {
         setError(result.error);
       }
@@ -235,6 +246,20 @@ export default function Promociones() {
           Nueva Promoción
         </button>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          <span>{successMessage}</span>
+          <button
+            onClick={() => setSuccessMessage(null)}
+            className="ml-auto text-green-700 hover:text-green-900"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -310,7 +335,7 @@ export default function Promociones() {
                       ) : (
                         <>
                           <DollarSign className="w-4 h-4" />
-                          <span className="font-bold">${promocion.valor_descuento}</span>
+                          <span className="font-bold">S/. {promocion.valor_descuento}</span>
                         </>
                       )}
                     </div>
@@ -464,7 +489,7 @@ export default function Promociones() {
                 {/* Valor del descuento */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {formData.tipo_descuento === 'porcentaje' ? 'Porcentaje de descuento' : 'Monto del descuento'}
+                    {formData.tipo_descuento === 'porcentaje' ? 'Porcentaje de descuento' : 'Monto del descuento (S/.)'}
                   </label>
                   <div className="relative">
                     <input
@@ -478,7 +503,7 @@ export default function Promociones() {
                       className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formErrors.valor_descuento ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder={formData.tipo_descuento === 'porcentaje' ? '10' : '100'}
+                      placeholder={formData.tipo_descuento === 'porcentaje' ? '10' : '50.00'}
                     />
                     {formData.tipo_descuento === 'porcentaje' ? (
                       <Percent className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
