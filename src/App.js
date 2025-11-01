@@ -88,6 +88,7 @@ import TemplateLayout from './components/layout/TemplateLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
+import ConfiguracionPagos from './pages/ConfiguracionPagos';
 import ConfiguracionServicios from './pages/ConfiguracionServicios';
 import ChatbotConfig from './pages/ChatbotConfig';
 import UserBusinessManagement from './pages/UserBusinessManagement';
@@ -311,6 +312,16 @@ function App() {
           }
         />
 
+        <Route
+          path="/configuracion/pagos"
+          element={
+            <PrivateRoute>
+              <ConfiguracionPagos />
+              </PrivateRoute>
+          }
+        />  
+            
+            
          <Route
           path="/configuracion/servicios"
           element={
