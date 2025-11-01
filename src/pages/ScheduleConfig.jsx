@@ -10,7 +10,6 @@ import {
   X
 } from 'lucide-react';
 import ScheduleService from '../services/scheduleService';
-import { useAuth } from '../hooks/useAuth';
 
 const DIAS_SEMANA = [
   { id: 'lunes', label: 'Lunes', short: 'L' },
@@ -32,10 +31,7 @@ const INTERVALOS = [
 ];
 
 export default function ScheduleConfig() {
-  const { userData } = useAuth();
-  const [scheduleService] = useState(
-    () => new ScheduleService(userData?.codigo_negocio)
-  );
+  const [scheduleService] = useState(() => new ScheduleService());
 
   // Estados para la configuración de horarios
   const [diasLaborables, setDiasLaborables] = useState({

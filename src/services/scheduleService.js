@@ -1,14 +1,13 @@
 // services/scheduleService.js
 class ScheduleService {
-  constructor(codigoNegocio) {
-    this.codigoNegocio = codigoNegocio;
-    this.baseUrl = '/api/v1/negocios';
+  constructor() {
+    this.baseUrl = '/api/v1/horarios';
   }
 
   // Obtener configuración de horarios
   async getScheduleConfig() {
     const response = await fetch(
-      `${this.baseUrl}/${this.codigoNegocio}/horarios`,
+      this.baseUrl,
       {
         method: 'GET',
         credentials: 'include',
@@ -28,7 +27,7 @@ class ScheduleService {
   // Guardar configuración de horarios
   async saveScheduleConfig(scheduleData) {
     const response = await fetch(
-      `${this.baseUrl}/${this.codigoNegocio}/horarios`,
+      this.baseUrl,
       {
         method: 'POST',
         credentials: 'include',
@@ -49,7 +48,7 @@ class ScheduleService {
   // Obtener excepciones (feriados, vacaciones)
   async getExceptions() {
     const response = await fetch(
-      `${this.baseUrl}/${this.codigoNegocio}/horarios/excepciones`,
+      `${this.baseUrl}/excepciones`,
       {
         method: 'GET',
         credentials: 'include',
@@ -69,7 +68,7 @@ class ScheduleService {
   // Agregar excepción
   async addException(exceptionData) {
     const response = await fetch(
-      `${this.baseUrl}/${this.codigoNegocio}/horarios/excepciones`,
+      `${this.baseUrl}/excepciones`,
       {
         method: 'POST',
         credentials: 'include',
@@ -90,7 +89,7 @@ class ScheduleService {
   // Eliminar excepción
   async deleteException(exceptionId) {
     const response = await fetch(
-      `${this.baseUrl}/${this.codigoNegocio}/horarios/excepciones/${exceptionId}`,
+      `${this.baseUrl}/excepciones/${exceptionId}`,
       {
         method: 'DELETE',
         credentials: 'include',
