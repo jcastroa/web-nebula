@@ -88,6 +88,7 @@ import TemplateLayout from './components/layout/TemplateLayout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
+import ScheduleConfig from './pages/ScheduleConfig';
 import Promociones from './pages/Promociones';
 import ConfiguracionPagos from './pages/ConfiguracionPagos';
 import ConfiguracionServicios from './pages/ConfiguracionServicios';
@@ -314,6 +315,15 @@ function App() {
         />
 
         <Route
+          path="/configuracion/horarios"
+          element={
+            <PrivateRoute>
+              <ScheduleConfig />
+              </PrivateRoute>
+          }
+        />  
+            
+         <Route
           path="/configuracion/promociones"
           element={
             <PrivateRoute>
