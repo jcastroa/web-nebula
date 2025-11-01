@@ -3,7 +3,7 @@ import api from './api';
 
 class PromotionService {
     constructor() {
-        this.baseUrl = '/promociones';
+        this.baseUrl = '/promociones/';
     }
 
     /**
@@ -14,7 +14,8 @@ class PromotionService {
             const response = await api.get(this.baseUrl);
             return {
                 success: true,
-                data: response.data
+                data: response.data.promociones || [],
+                total: response.data.total || 0
             };
         } catch (error) {
             return {
@@ -51,7 +52,7 @@ class PromotionService {
      */
     async actualizarPromocion(id, promocion) {
         try {
-            const response = await api.put(`${this.baseUrl}/${id}`, promocion);
+            const response = await api.put(`${this.baseUrl}${id}/`, promocion);
             return {
                 success: true,
                 data: response.data
@@ -71,7 +72,7 @@ class PromotionService {
      */
     async eliminarPromocion(id) {
         try {
-            const response = await api.delete(`${this.baseUrl}/${id}`);
+            const response = await api.delete(`${this.baseUrl}${id}/`);
             return {
                 success: true,
                 data: response.data
