@@ -49,13 +49,13 @@ export default function ScheduleConfig() {
   });
 
   const [horariosPorDia, setHorariosPorDia] = useState({
-    lunes: { inicio: '09:00', fin: '18:00' },
-    martes: { inicio: '09:00', fin: '18:00' },
-    miercoles: { inicio: '09:00', fin: '18:00' },
-    jueves: { inicio: '09:00', fin: '18:00' },
-    viernes: { inicio: '09:00', fin: '18:00' },
-    sabado: { inicio: '09:00', fin: '13:00' },
-    domingo: { inicio: '09:00', fin: '13:00' }
+    lunes: [{ inicio: '09:00', fin: '18:00' }],
+    martes: [{ inicio: '09:00', fin: '18:00' }],
+    miercoles: [{ inicio: '09:00', fin: '18:00' }],
+    jueves: [{ inicio: '09:00', fin: '18:00' }],
+    viernes: [{ inicio: '09:00', fin: '18:00' }],
+    sabado: [{ inicio: '09:00', fin: '13:00' }],
+    domingo: [{ inicio: '09:00', fin: '13:00' }]
   });
 
   const [intervaloCitas, setIntervaloCitas] = useState(30);
@@ -91,7 +91,17 @@ export default function ScheduleConfig() {
         setDiasLaborables(config.dias_laborables);
       }
       if (config.horarios) {
-        setHorariosPorDia(config.horarios);
+        // Convertir a formato de array si viene en formato antiguo (objeto simple)
+        const horariosFormateados = {};
+        Object.keys(config.horarios).forEach(dia => {
+          if (Array.isArray(config.horarios[dia])) {
+            horariosFormateados[dia] = config.horarios[dia];
+          } else {
+            // Convertir formato antiguo {inicio, fin} a [{inicio, fin}]
+            horariosFormateados[dia] = [config.horarios[dia]];
+          }
+        });
+        setHorariosPorDia(horariosFormateados);
       }
       if (config.intervalo_citas) {
         setIntervaloCitas(config.intervalo_citas);
@@ -120,13 +130,122 @@ export default function ScheduleConfig() {
     }));
   };
 
-  const handleHorarioChange = (diaId, field, value) => {
+  // Función para validar que dos intervalos no se crucen
+  const validarNoCruce = (intervalos, nuevoIntervalo, indexExcluir = -1) => {
+    const timeToMinutes = (time) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const inicioNuevo = timeToMinutes(nuevoIntervalo.inicio);
+    const finNuevo = timeToMinutes(nuevoIntervalo.fin);
+
+    // Validar que inicio sea menor que fin
+    if (inicioNuevo >= finNuevo) {
+      return { valido: false, mensaje: 'La hora de inicio debe ser menor que la hora de fin' };
+    }
+
+    // Verificar cruce con otros intervalos
+    for (let i = 0; i < intervalos.length; i++) {
+      if (i === indexExcluir) continue; // Excluir el intervalo que se está editando
+
+      const inicioExistente = timeToMinutes(intervalos[i].inicio);
+      const finExistente = timeToMinutes(intervalos[i].fin);
+
+      // Verificar si hay cruce
+      const hayCruce = (
+        (inicioNuevo >= inicioExistente && inicioNuevo < finExistente) || // Inicio dentro de otro intervalo
+        (finNuevo > inicioExistente && finNuevo <= finExistente) || // Fin dentro de otro intervalo
+        (inicioNuevo <= inicioExistente && finNuevo >= finExistente) // Contiene completamente otro intervalo
+      );
+
+      if (hayCruce) {
+        return {
+          valido: false,
+          mensaje: `Este horario se cruza con el intervalo ${intervalos[i].inicio} - ${intervalos[i].fin}`
+        };
+      }
+    }
+
+    return { valido: true };
+  };
+
+  const handleHorarioChange = (diaId, index, field, value) => {
+    const nuevosHorarios = [...horariosPorDia[diaId]];
+    nuevosHorarios[index] = {
+      ...nuevosHorarios[index],
+      [field]: value
+    };
+
+    // Validar no cruce
+    const validacion = validarNoCruce(
+      horariosPorDia[diaId],
+      nuevosHorarios[index],
+      index
+    );
+
+    if (!validacion.valido) {
+      setError(validacion.mensaje);
+      setTimeout(() => setError(null), 4000);
+      return;
+    }
+
     setHorariosPorDia(prev => ({
       ...prev,
-      [diaId]: {
-        ...prev[diaId],
-        [field]: value
-      }
+      [diaId]: nuevosHorarios
+    }));
+  };
+
+  const handleAgregarIntervalo = (diaId) => {
+    const ultimoIntervalo = horariosPorDia[diaId][horariosPorDia[diaId].length - 1];
+
+    // Calcular sugerencia para el nuevo intervalo (2 horas después del último)
+    const timeToMinutes = (time) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const minutesToTime = (mins) => {
+      const hours = Math.floor(mins / 60);
+      const minutes = mins % 60;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    };
+
+    const finUltimo = timeToMinutes(ultimoIntervalo.fin);
+    const nuevoInicio = Math.min(finUltimo + 60, 20 * 60); // Máximo 20:00
+    const nuevoFin = Math.min(nuevoInicio + 4 * 60, 22 * 60); // Máximo 22:00
+
+    const nuevoIntervalo = {
+      inicio: minutesToTime(nuevoInicio),
+      fin: minutesToTime(nuevoFin)
+    };
+
+    // Validar el nuevo intervalo
+    const validacion = validarNoCruce(horariosPorDia[diaId], nuevoIntervalo);
+
+    if (!validacion.valido) {
+      setError(validacion.mensaje);
+      setTimeout(() => setError(null), 4000);
+      return;
+    }
+
+    setHorariosPorDia(prev => ({
+      ...prev,
+      [diaId]: [...prev[diaId], nuevoIntervalo]
+    }));
+  };
+
+  const handleEliminarIntervalo = (diaId, index) => {
+    // No permitir eliminar si es el último intervalo
+    if (horariosPorDia[diaId].length === 1) {
+      setError('Debe haber al menos un intervalo de horario por día');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    setHorariosPorDia(prev => ({
+      ...prev,
+      [diaId]: prev[diaId].filter((_, i) => i !== index)
     }));
   };
 
@@ -278,43 +397,88 @@ export default function ScheduleConfig() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Horarios de Atención por Día
         </h2>
-        <div className="space-y-3">
+        <p className="text-gray-600 mb-4">
+          Puedes agregar múltiples intervalos por día (ej: 9am-1pm y 4pm-8pm)
+        </p>
+        <div className="space-y-4">
           {DIAS_SEMANA.map(dia => (
             <div
               key={dia.id}
               className={`
-                flex flex-col md:flex-row md:items-center gap-4 p-4 rounded-lg
+                p-4 rounded-lg border
                 ${diasLaborables[dia.id]
-                  ? 'bg-blue-50 border border-blue-200'
-                  : 'bg-gray-50 border border-gray-200 opacity-60'
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-gray-50 border-gray-200 opacity-60'
                 }
               `}
             >
-              <div className="w-32 font-medium text-gray-900">
-                {dia.label}
-              </div>
-              <div className="flex items-center gap-4 flex-1">
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600 font-medium">Inicio:</label>
-                  <input
-                    type="time"
-                    value={horariosPorDia[dia.id].inicio}
-                    onChange={(e) => handleHorarioChange(dia.id, 'inicio', e.target.value)}
-                    disabled={!diasLaborables[dia.id]}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-semibold text-gray-900 text-lg">
+                  {dia.label}
                 </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600 font-medium">Fin:</label>
-                  <input
-                    type="time"
-                    value={horariosPorDia[dia.id].fin}
-                    onChange={(e) => handleHorarioChange(dia.id, 'fin', e.target.value)}
-                    disabled={!diasLaborables[dia.id]}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  />
-                </div>
+                {diasLaborables[dia.id] && (
+                  <button
+                    onClick={() => handleAgregarIntervalo(dia.id)}
+                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Agregar intervalo
+                  </button>
+                )}
               </div>
+
+              <div className="space-y-2">
+                {horariosPorDia[dia.id].map((intervalo, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600 font-medium whitespace-nowrap">
+                          Inicio:
+                        </label>
+                        <input
+                          type="time"
+                          value={intervalo.inicio}
+                          onChange={(e) => handleHorarioChange(dia.id, index, 'inicio', e.target.value)}
+                          disabled={!diasLaborables[dia.id]}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                      <span className="text-gray-400">—</span>
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600 font-medium whitespace-nowrap">
+                          Fin:
+                        </label>
+                        <input
+                          type="time"
+                          value={intervalo.fin}
+                          onChange={(e) => handleHorarioChange(dia.id, index, 'fin', e.target.value)}
+                          disabled={!diasLaborables[dia.id]}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                    </div>
+
+                    {diasLaborables[dia.id] && horariosPorDia[dia.id].length > 1 && (
+                      <button
+                        onClick={() => handleEliminarIntervalo(dia.id, index)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar intervalo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {!diasLaborables[dia.id] && (
+                <div className="text-sm text-gray-500 italic mt-2">
+                  Día no laborable
+                </div>
+              )}
             </div>
           ))}
         </div>
