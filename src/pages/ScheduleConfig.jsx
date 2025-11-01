@@ -131,10 +131,20 @@ export default function ScheduleConfig() {
   };
 
   const handleDiaToggle = (diaId) => {
+    const nuevoEstado = !diasLaborables[diaId];
+
     setDiasLaborables(prev => ({
       ...prev,
-      [diaId]: !prev[diaId]
+      [diaId]: nuevoEstado
     }));
+
+    // Si se está activando el día y no tiene horarios, agregar uno por defecto
+    if (nuevoEstado && horariosPorDia[diaId].length === 0) {
+      setHorariosPorDia(prev => ({
+        ...prev,
+        [diaId]: [{ inicio: '09:00', fin: '18:00' }]
+      }));
+    }
   };
 
   // Función para validar que dos intervalos no se crucen
