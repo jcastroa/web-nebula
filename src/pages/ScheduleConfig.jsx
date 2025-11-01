@@ -72,6 +72,7 @@ export default function ScheduleConfig() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingException, setIsAddingException] = useState(false);
+  const [isDeletingException, setIsDeletingException] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -356,6 +357,7 @@ export default function ScheduleConfig() {
     if (!exceptionToDelete) return;
 
     try {
+      setIsDeletingException(true);
       const result = await scheduleService.deleteException(exceptionToDelete.id);
 
       if (result.success) {
@@ -372,6 +374,8 @@ export default function ScheduleConfig() {
     } catch (err) {
       setError('Error al eliminar excepción: ' + err.message);
       topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } finally {
+      setIsDeletingException(false);
     }
   };
 
@@ -430,7 +434,7 @@ export default function ScheduleConfig() {
       )}
 
       {/* Panel de Configuración de Horarios */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-8 mb-8 shadow-lg">
+      <div className="bg-white rounded-xl border border-gray-200 p-8 mb-8 shadow-sm">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
             <Clock className="w-6 h-6 text-blue-600" />
@@ -839,16 +843,27 @@ export default function ScheduleConfig() {
                   setShowDeleteModal(false);
                   setExceptionToDelete(null);
                 }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isDeletingException}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDeleteException}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                disabled={isDeletingException}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Trash2 className="w-4 h-4" />
-                Eliminar
+                {isDeletingException ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar
+                  </>
+                )}
               </button>
             </div>
           </div>
