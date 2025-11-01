@@ -329,12 +329,12 @@ export default function Promociones() {
                     <div className="flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full">
                       {promocion.tipo_descuento === 'porcentaje' ? (
                         <>
-                          <Percent className="w-4 h-4" />
+                          
                           <span className="font-bold">{promocion.valor_descuento}%</span>
                         </>
                       ) : (
                         <>
-                          <DollarSign className="w-4 h-4" />
+                          
                           <span className="font-bold">S/. {promocion.valor_descuento}</span>
                         </>
                       )}
