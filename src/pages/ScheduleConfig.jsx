@@ -145,6 +145,14 @@ export default function ScheduleConfig() {
         [diaId]: [{ inicio: '09:00', fin: '18:00' }]
       }));
     }
+
+    // Si se está desactivando el día, limpiar sus horarios
+    if (!nuevoEstado) {
+      setHorariosPorDia(prev => ({
+        ...prev,
+        [diaId]: []
+      }));
+    }
   };
 
   // Función para validar que dos intervalos no se crucen
