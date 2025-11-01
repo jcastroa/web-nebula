@@ -9,7 +9,7 @@ import {
   Loader2,
   X
 } from 'lucide-react';
-import ScheduleService from '../services/scheduleService';
+import scheduleService from '../services/scheduleService';
 
 const DIAS_SEMANA = [
   { id: 'lunes', label: 'Lunes', short: 'L' },
@@ -31,7 +31,6 @@ const INTERVALOS = [
 ];
 
 export default function ScheduleConfig() {
-  const [scheduleService] = useState(() => new ScheduleService());
 
   // Estados para la configuración de horarios
   const [diasLaborables, setDiasLaborables] = useState({
@@ -81,7 +80,15 @@ export default function ScheduleConfig() {
   const loadScheduleConfig = async () => {
     try {
       setIsLoading(true);
-      const config = await scheduleService.getScheduleConfig();
+      const result = await scheduleService.getScheduleConfig();
+
+      if (!result.success) {
+        console.error('Error loading schedule config:', result.error);
+        // Si no existe configuración, usar valores por defecto
+        return;
+      }
+
+      const config = result.data;
 
       if (config.dias_laborables) {
         setDiasLaborables(config.dias_laborables);
@@ -112,8 +119,12 @@ export default function ScheduleConfig() {
 
   const loadExceptions = async () => {
     try {
-      const data = await scheduleService.getExceptions();
-      setExcepciones(data.excepciones || []);
+      const result = await scheduleService.getExceptions();
+      if (result.success) {
+        setExcepciones(result.data.excepciones || []);
+      } else {
+        console.error('Error loading exceptions:', result.error);
+      }
     } catch (err) {
       console.error('Error loading exceptions:', err);
     }
@@ -256,10 +267,14 @@ export default function ScheduleConfig() {
         intervalo_citas: intervaloCitas
       };
 
-      await scheduleService.saveScheduleConfig(scheduleData);
+      const result = await scheduleService.saveScheduleConfig(scheduleData);
 
-      setSuccessMessage('Configuración guardada exitosamente');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      if (result.success) {
+        setSuccessMessage('Configuración guardada exitosamente');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError('Error al guardar la configuración: ' + result.error);
+      }
     } catch (err) {
       setError('Error al guardar la configuración: ' + err.message);
     } finally {
@@ -274,17 +289,22 @@ export default function ScheduleConfig() {
     }
 
     try {
-      await scheduleService.addException(newException);
-      await loadExceptions();
-      setShowExceptionModal(false);
-      setNewException({
-        fechaInicio: '',
-        fechaFin: '',
-        motivo: '',
-        tipo: 'feriado'
-      });
-      setSuccessMessage('Excepción agregada exitosamente');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      const result = await scheduleService.addException(newException);
+
+      if (result.success) {
+        await loadExceptions();
+        setShowExceptionModal(false);
+        setNewException({
+          fechaInicio: '',
+          fechaFin: '',
+          motivo: '',
+          tipo: 'feriado'
+        });
+        setSuccessMessage('Excepción agregada exitosamente');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError('Error al agregar excepción: ' + result.error);
+      }
     } catch (err) {
       setError('Error al agregar excepción: ' + err.message);
     }
@@ -296,10 +316,15 @@ export default function ScheduleConfig() {
     }
 
     try {
-      await scheduleService.deleteException(exceptionId);
-      await loadExceptions();
-      setSuccessMessage('Excepción eliminada exitosamente');
-      setTimeout(() => setSuccessMessage(null), 3000);
+      const result = await scheduleService.deleteException(exceptionId);
+
+      if (result.success) {
+        await loadExceptions();
+        setSuccessMessage('Excepción eliminada exitosamente');
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError('Error al eliminar excepción: ' + result.error);
+      }
     } catch (err) {
       setError('Error al eliminar excepción: ' + err.message);
     }
