@@ -289,12 +289,16 @@ export default function ScheduleConfig() {
 
       if (result.success) {
         setSuccessMessage('Configuración guardada exitosamente');
+        // Scroll al inicio para mostrar el mensaje de éxito
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         setError('Error al guardar la configuración: ' + result.error);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
       setError('Error al guardar la configuración: ' + err.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSaving(false);
     }
@@ -303,6 +307,7 @@ export default function ScheduleConfig() {
   const handleAddException = async () => {
     if (!newException.fechaInicio || !newException.motivo) {
       setError('Fecha de inicio y motivo son obligatorios');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -319,12 +324,15 @@ export default function ScheduleConfig() {
           tipo: 'feriado'
         });
         setSuccessMessage('Excepción agregada exitosamente');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         setError('Error al agregar excepción: ' + result.error);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
       setError('Error al agregar excepción: ' + err.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -339,12 +347,15 @@ export default function ScheduleConfig() {
       if (result.success) {
         await loadExceptions();
         setSuccessMessage('Excepción eliminada exitosamente');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         setError('Error al eliminar excepción: ' + result.error);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
       setError('Error al eliminar excepción: ' + err.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -550,6 +561,27 @@ export default function ScheduleConfig() {
         </div>
       </div>
 
+      {/* Botón Guardar Configuración */}
+      <div className="flex justify-end mb-8">
+        <button
+          onClick={handleSaveConfig}
+          disabled={isSaving}
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium text-lg"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Guardando...
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5" />
+              Guardar Configuración
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Excepciones (Feriados, Vacaciones) */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -614,27 +646,6 @@ export default function ScheduleConfig() {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Botón Guardar */}
-      <div className="flex justify-end">
-        <button
-          onClick={handleSaveConfig}
-          disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Guardando...
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              Guardar Configuración
-            </>
-          )}
-        </button>
       </div>
 
       {/* Modal para Agregar Excepción */}
