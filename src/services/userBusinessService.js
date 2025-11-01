@@ -1,0 +1,249 @@
+import api from './api';
+
+/**
+ * Servicio para gestión de usuarios y sus asignaciones a negocios
+ * @version 1.0.2 - All endpoints fixed with trailing slashes + debugging
+ */
+
+/**
+ * Crear un nuevo usuario
+ * @param {Object} userData - Datos del usuario (username, nombres, apellidos, email, rol_global)
+ * @returns {Promise} Respuesta con el usuario creado
+ */
+export const createUser = async (userData) => {
+  try {
+    const response = await api.post('/users/', userData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Obtener lista de usuarios
+ * @param {Object} params - Parámetros de búsqueda y paginación
+ * @returns {Promise} Lista de usuarios
+ */
+export const getUsers = async (params = {}) => {
+  try {
+    const response = await api.get('/users/', { params });
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Obtener un usuario por ID
+ * @param {number} userId - ID del usuario
+ * @returns {Promise} Datos del usuario
+ */
+export const getUserById = async (userId) => {
+  try {
+    const response = await api.get(`/users/${userId}/`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Actualizar un usuario
+ * @param {number} userId - ID del usuario
+ * @param {Object} userData - Datos a actualizar
+ * @returns {Promise} Usuario actualizado
+ */
+export const updateUser = async (userId, userData) => {
+  try {
+    const response = await api.put(`/users/${userId}`, userData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Desactivar un usuario
+ * @param {number} userId - ID del usuario
+ * @returns {Promise} Resultado de la operación
+ */
+export const deactivateUser = async (userId) => {
+  try {
+    const response = await api.patch(`/users/${userId}/desactivar/`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Activar un usuario
+ * @param {number} userId - ID del usuario
+ * @returns {Promise} Resultado de la operación
+ */
+export const activateUser = async (userId) => {
+  try {
+    const response = await api.patch(`/users/${userId}/activar/`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Obtener lista de negocios disponibles
+ * @returns {Promise} Lista de negocios
+ */
+export const getBusinesses = async () => {
+  try {
+    const response = await api.get('/negocios/', {
+      params: {
+        activo_only: false
+      }
+    });
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Obtener lista de roles disponibles
+ * @returns {Promise} Lista de roles
+ */
+export const getRoles = async () => {
+  try {
+    const response = await api.get('/roles/');
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Crear asignación de usuario a negocio
+ * @param {Object} assignmentData - Datos de asignación (usuario_id, negocio_id, rol_id, es_principal)
+ * @returns {Promise} Asignación creada
+ */
+export const createBusinessAssignment = async (assignmentData) => {
+  try {
+    const response = await api.post('/usuarios/asignaciones/', assignmentData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Obtener asignaciones de un usuario
+ * @param {number} userId - ID del usuario
+ * @returns {Promise} Lista de asignaciones del usuario
+ */
+export const getUserAssignments = async (userId) => {
+  try {
+    // Sin trailing slash para este endpoint específico
+    const url = `/usuarios/${userId}/asignaciones`;
+    console.log('🔍 Fetching assignments from:', url);
+    const response = await api.get(url);
+    console.log('✅ Assignments fetched successfully');
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error('❌ Error fetching assignments:', error);
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Actualizar una asignación
+ * @param {number} assignmentId - ID de la asignación
+ * @param {Object} assignmentData - Datos a actualizar (rol_id, es_principal)
+ * @returns {Promise} Asignación actualizada
+ */
+export const updateBusinessAssignment = async (assignmentId, assignmentData) => {
+  try {
+    const response = await api.put(`/usuarios/asignaciones/${assignmentId}/`, assignmentData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Desactivar una asignación
+ * @param {number} assignmentId - ID de la asignación
+ * @returns {Promise} Resultado de la operación
+ */
+export const deactivateBusinessAssignment = async (assignmentId) => {
+  try {
+    const response = await api.patch(`/usuarios/asignaciones/${assignmentId}/desactivar/`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
+
+/**
+ * Activar una asignación
+ * @param {number} assignmentId - ID de la asignación
+ * @returns {Promise} Resultado de la operación
+ */
+export const activateBusinessAssignment = async (assignmentId) => {
+  try {
+    const response = await api.patch(`/usuarios/asignaciones/${assignmentId}/activar/`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status
+    };
+  }
+};
