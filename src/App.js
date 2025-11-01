@@ -89,6 +89,11 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import WhatsAppVinculacion from './pages/WhatsAppVinculacion';
 import Promociones from './pages/Promociones';
+import ConfiguracionPagos from './pages/ConfiguracionPagos';
+import ConfiguracionServicios from './pages/ConfiguracionServicios';
+import ChatbotConfig from './pages/ChatbotConfig';
+import UserBusinessManagement from './pages/UserBusinessManagement';
+import BusinessConfig from './pages/BusinessConfig';
 
 // Wrapper que aplica el Layout automáticamente a las rutas protegidas
 const LayoutWrapper = ({ children }) => {
@@ -313,6 +318,51 @@ function App() {
           element={
             <PrivateRoute>
               <Promociones />
+            </PrivateRoute>
+                    }
+                  />  
+            
+            
+         <Route
+          path="/configuracion/pagos"
+          element={
+            <PrivateRoute>
+              <ConfiguracionPagos />
+              </PrivateRoute>
+          }
+        />  
+            
+            
+         <Route
+          path="/configuracion/servicios"
+          element={
+            <PrivateRoute>
+              <ConfiguracionServicios />
+            </PrivateRoute>
+          }
+        />  
+
+         <Route
+          path="/configuracion/chatbot"
+          element={
+            <PrivateRoute>
+              <ChatbotConfig />
+            </PrivateRoute>
+          }
+        />  
+          <Route
+          path="/configuracion/usuarios"
+          element={
+            <PrivateRoute>
+              <UserBusinessManagement />
+            </PrivateRoute>
+          }
+        />  
+          <Route
+          path="/configuracion/negocios"
+          element={
+            <PrivateRoute>
+              <BusinessConfig />
             </PrivateRoute>
           }
         />
